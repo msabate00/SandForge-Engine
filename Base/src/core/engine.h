@@ -1,0 +1,98 @@
+#pragma once
+#include <vector>
+#include <cstdint>
+#include "material.h"
+
+
+
+struct AudioEvent {
+    enum class Type : std::uint8_t { Ignite, Paint };
+    Type type;
+    int x, y;  
+};
+
+struct NPC {
+    int x, y;
+    int w = 2, h = 4;
+    int dir = 1;
+    float vy = 0.0f; 
+    bool alive = true;
+};
+
+
+class Engine {
+public:
+    Engine(int gridW, int gridH);
+
+    void update(float dt);
+    void paint(int cx, int cy, Material m, int radius);
+
+    int width()  const { return w; }
+    int height() const { return h; }
+
+    const std::uint8_t* planeM() const { return mFront.data(); }
+
+    // Dirty-rect: true si hay cambios (rellena x,y,rw,rh)
+    bool takeDirtyRect(int& x, int& y, int& rw, int& rh);
+
+    bool takeAudioEvents(std::vector<AudioEvent>& out) {
+        if (audioEvents.empty()) return false;
+        out.swap(audioEvents);
+        return true;
+    }
+
+    // util
+    int idx(int x, int y) const { return y * w + x; }
+    static bool inRange(int x, int y, int W, int H) { return x >= 0 && x < W && y >= 0 && y < H; }
+     bool inRange(int x, int y) const { return x >= 0 && x < w && y >= 0 && y < h; }
+    Cell read(int x, int y) {
+        return (inRange(x, y)) ? front[idx(x, y)] : Cell{ (u8)Material::NullCell };
+    }
+
+    static bool randbit(int x, int y, int parity);
+
+    bool tryMove(int sx, int sy, int dx, int dy, const Cell& c);
+    bool trySwap(int sx, int sy, int dx, int dy, const Cell& c);
+
+    void setCell(int x, int y, u8 m);
+
+    Material getCell(int x, int y);
+
+    bool stepOnce = false;
+    bool paused = false;
+
+    //NPC
+    void addNPC(int x, int y);
+    const std::vector<NPC>& getNPCs() const { return npcs; }
+
+private:
+
+    int w, h;
+    std::vector<Cell> front, back;
+    std::vector<u8> mFront, mBack;
+
+    // Timestep fijo
+    float accumulator = 0.f;
+    static constexpr float fixedStep = 1.f / 120.f;
+    int parity = 0;
+
+    // sim
+    void step();
+    void swapBuffers() { front.swap(back); mFront.swap(mBack); }
+
+    // Dirty tracking
+    int dirtyMinX, dirtyMinY, dirtyMaxX, dirtyMaxY;
+    void clearDirty(); 
+    void markDirty(int x, int y);
+    void markDirtyRect(int x0, int y0, int x1, int y1);
+
+    std::vector<AudioEvent> audioEvents;
+
+    //NPC
+    std::vector<NPC> npcs;
+    std::vector<int> occ;
+
+    void rebuildOcc();
+    bool rectFreeOnBack(int x, int y, int w, int h, int ignoreId) const;
+    void moveNPCs();
+};
