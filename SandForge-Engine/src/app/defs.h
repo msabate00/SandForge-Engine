@@ -5,6 +5,7 @@
 
 #define RELEASE(x) do { if ((x) != nullptr) { delete (x); (x) = nullptr; } } while(0)
 
+typedef int8_t int8;
 typedef std::uint8_t uint8;
 typedef unsigned int uint;
 typedef unsigned char uchar;

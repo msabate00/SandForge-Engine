@@ -1,9 +1,13 @@
 ﻿#include "Engine.h" 
 #include "app/Module.h"  
 #include "app/app.h"
+#include "input.h"
 
 Engine::Engine(App* app, bool start_enabled) : Module(app, start_enabled) {};
 Engine::~Engine() = default;
+
+
+
 
 bool Engine::Awake() { 
 
@@ -27,14 +31,14 @@ bool Engine::Update(float dt) {
 	
 	elapsedTimeSinceStep += dt;
 
+
+
     while (elapsedTimeSinceStep >= fixedTimeStep && (!paused || stepOnce)) {
         back = front;
         mBack = mFront;
 
 
-
         Step();
-        
 
 
         front.swap(back);
@@ -59,29 +63,54 @@ bool Engine::CleanUp() { return true; }
 
 bool Engine::tryMove(int x0, int y0, int x1, int y1, const Cell& c)
 {
-    return false;
+
+    int nx = x0 + x1, ny = y0 + y1;
+    if (!InRange(nx, ny)) return false;
+    int si = LinearIndex(x0, y0), ni = LinearIndex(nx, ny);
+
+    if (back[ni].m != (uint8)Material::Empty) return false;
+   
+
+    back[ni] = c;
+    if (back[si].m == front[si].m) back[si].m = (uint8)Material::Empty;
+
+
+    mBack[ni] = c.m;
+    mBack[si] = (uint8)Material::Empty;
+
+    return true;
 }
 
 bool Engine::trySwap(int x0, int y0, int x1, int y1, const Cell& c)
 {
-    return false;
+    int nx = x0 + x1, ny = y0 + y1;
+    if (!InRange(nx, ny)) return false;
+
+    int si = LinearIndex(x0, y0);
+    int ni = LinearIndex(nx, ny);
+    if (si == ni) return false;
+
+    const Cell& dst = front[ni];
+
+    back[ni] = c;
+    back[si] = dst;
+
+    mBack[ni] = c.m;
+    mBack[si] = dst.m;
+    return true;
 }
 
-void Engine::setCell(int x, int y, uint8 m)
+void Engine::SetCell(int x, int y, uint8 m)
 {
     if (!InRange(x, y)) return;
     int i = LinearIndex(x, y);
     uint8 prev = back[i].m;
     if (prev == m) return;
 
-    front[i].m = m;  mFront[i] = m; 
     back[i].m = m;  mBack[i] = m;
 }
 
-Material Engine::getCell(int x, int y)
-{
-    return Material();
-}
+
 
 void Engine::Step() {
 
@@ -108,8 +137,8 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
 
 
     int r2 = r * r;
-    int xmin = std::max(0, cx - r), xmax = std::fmin(gridW - 1, cx + r);
-    int ymin = std::max(0, cy - r), ymax = std::fmin(gridH - 1, cy + r);
+    int xmin = std::max(0, cx - r), xmax = std::min(gridW - 1, cx + r);
+    int ymin = std::max(0, cy - r), ymax = std::min(gridH - 1, cy + r);
 
 
 
@@ -125,4 +154,10 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
         }
    /* markDirtyRect(xmin, ymin, xmax, ymax);
     audioEvents.push_back({ AudioEvent::Type::Paint, cx, cy });*/
+}
+
+bool Engine::randbit(int x, int y, int parity) {
+    uint32_t h = (uint32_t)(x * 374761393u) ^ (uint32_t)(y * 668265263u) ^ (uint32_t)(parity * 0x9E3779B9u);
+    h ^= h >> 13; h *= 1274126177u; h ^= h >> 16;
+    return (h & 1u) != 0u;
 }

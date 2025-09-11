@@ -98,7 +98,7 @@ bool Renderer::Update(float dt) {
 bool Renderer::PostUpdate() { return true; }
 bool Renderer::CleanUp() { return true; }
 
-void Renderer::Draw(const std::uint8_t* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh)
+void Renderer::Draw(const uint8* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh)
 {
     if (!texValid || texW != gridW || texH != gridH) {
         uploadFullCPU(planeM, gridW, gridH);
@@ -106,14 +106,14 @@ void Renderer::Draw(const std::uint8_t* planeM, int gridW, int gridH, int viewW,
     else if (rw > 0 && rh > 0) {
         scratchRect.resize(size_t(rw) * size_t(rh));
         for (int y = 0; y < rh; ++y) {
-            const uint8_t* srcRow = &planeM[size_t(y0 + y) * size_t(gridW) + size_t(x0)];
-            uint8_t* dstRow = &scratchRect[size_t(y) * size_t(rw)];
+            const uint8* srcRow = &planeM[size_t(y0 + y) * size_t(gridW) + size_t(x0)];
+            uint8* dstRow = &scratchRect[size_t(y) * size_t(rw)];
             std::memcpy(dstRow, srcRow, size_t(rw));
         }
         uploadRectPBO(scratchRect.data(), rw, rh, x0, y0, gridW, gridH);
     }
 
-    DrawGrid(std::vector<uint8_t>{}, gridW, gridH, viewW, viewH);
+    DrawGrid(std::vector<uint8>{}, gridW, gridH, viewW, viewH);
 }
 
 
@@ -121,7 +121,7 @@ void Renderer::Draw(const std::uint8_t* planeM, int gridW, int gridH, int viewW,
 
 
 
-void Renderer::DrawGrid(const std::vector<uint8_t>& indices, int w, int h, int viewW, int viewH)
+void Renderer::DrawGrid(const std::vector<uint8>& indices, int w, int h, int viewW, int viewH)
 {
     if (!indices.empty()) {
         uploadFullCPU(indices.data(), w, h);
@@ -190,7 +190,7 @@ void Renderer::DrawGrid(const std::vector<uint8_t>& indices, int w, int h, int v
 
 }
 
-void Renderer::uploadFullCPU(const std::uint8_t* img, int w, int h) {
+void Renderer::uploadFullCPU(const uint8* img, int w, int h) {
     if (!img || w <= 0 || h <= 0) return;
     glBindTexture(GL_TEXTURE_2D, tex);
     if (w != texW || h != texH) {
@@ -201,7 +201,7 @@ void Renderer::uploadFullCPU(const std::uint8_t* img, int w, int h) {
     texValid = true;
 }
 
-void Renderer::uploadRectPBO(const std::uint8_t* src, int rw, int rh, int x0, int y0, int texWNeeded, int texHNeeded) {
+void Renderer::uploadRectPBO(const uint8* src, int rw, int rh, int x0, int y0, int texWNeeded, int texHNeeded) {
     if (rw <= 0 || rh <= 0) return;
 
     glBindTexture(GL_TEXTURE_2D, tex);

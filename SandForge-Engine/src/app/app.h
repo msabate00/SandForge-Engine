@@ -1,7 +1,6 @@
 #pragma once
 #include "app/defs.h"
 
-
 class GLFWwindow;
 
 class Engine;

@@ -23,17 +23,17 @@ public:
 
 private:
 
-    void DrawGrid(const std::vector<uint8_t>& indices, int w, int h, int viewW, int viewH);
+    void DrawGrid(const std::vector<uint8>& indices, int w, int h, int viewW, int viewH);
 
-    void uploadFullCPU(const std::uint8_t* img, int w, int h);
-    void uploadRectPBO(const std::uint8_t* src, int rw, int rh, int x0, int y0,
+    void uploadFullCPU(const uint8* img, int w, int h);
+    void uploadRectPBO(const uint8* src, int rw, int rh, int x0, int y0,
         int texWNeeded, int texHNeeded);
     void ensureSceneTargets(int viewW, int viewH);
     void drawFullscreen();
 
 public:
 
-    void Draw(const std::uint8_t* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh);
+    void Draw(const uint8* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh);
 
 private:
     uint progGrid = 0, vao = 0, tex = 0;;
@@ -59,7 +59,7 @@ private:
     uint pingFBO[2] = { 0,0 }, pingTex[2] = { 0,0 };
     int fboW = 0, fboH = 0;
 
-    std::vector<uint8_t> scratch;     // full
-    std::vector<uint8_t> scratchRect; // rect
+    std::vector<uint8> scratch;     // full
+    std::vector<uint8> scratchRect; // rect
 
 };

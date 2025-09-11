@@ -24,17 +24,22 @@ public:
 
     bool CleanUp();
 
-    const std::uint8_t* GetFrontPlane() { return mFront.data(); };
+    const uint8* GetFrontPlane() { return mFront.data(); };
 
 
     bool tryMove(int x0, int y0, int x1, int y1, const Cell& c);
     bool trySwap(int x0, int y0, int x1, int y1, const Cell& c);
 
-    void setCell(int x, int y, uint8 m);
+    void SetCell(int x, int y, uint8 m);
 
-    Material getCell(int x, int y);
+    Cell GetCell(int x, int y) {
+        return (InRange(x, y)) ? front[LinearIndex(x, y)] : Cell{ (uint8)Material::NullCell };
+    }
 
     void Engine::Paint(int cx, int cy, Material m, int r);
+
+    bool InRange(int x, int y) const { return x >= 0 && x < gridW && y >= 0 && y < gridH; }
+    bool Engine::randbit(int x, int y, int parity);
 
 private:
 
@@ -42,7 +47,7 @@ private:
 
     int LinearIndex(int x, int y) const { return y * gridW + x; };
 
-    bool InRange(int x, int y) const { return x >= 0 && x < gridW && y >= 0 && y < gridH; }
+    
 
 public:
     bool paused = false;

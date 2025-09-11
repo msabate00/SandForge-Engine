@@ -4,8 +4,6 @@
 #include <GLFW/glfw3.h>
 #include "material.h"
 
-
-
 class Input : public Module {
 public:
     Input(App* app, bool start_enabled = true);
@@ -26,11 +24,11 @@ public:
 
     void ProcessBindings(Material& brushMat, int& brushSize);
 
-    bool KeyDown(int key) const { return keys[key]; }
-    bool KeyUp(int key) const { return keys[key] && !prevKeys[key]; }
+    bool KeyRepeat(int key)   const { return keys[key]; }
+    bool KeyDown(int key)   const { return pressed[key]; }
+    bool KeyUp(int key)     const { return released[key]; }
 
     bool MouseDown(int button) const { return mouse[button]; }
-    bool MouseClicked(int button) const { return mouse[button] && !prevMouse[button]; }
 
     double MouseX() const { return mx; }
     double MouseY() const { return my; }
@@ -42,21 +40,16 @@ private:
     static void SMouseBtn(GLFWwindow* w, int button, int action, int mods);
     static void SScroll(GLFWwindow* w, double xoff, double yoff);
 
-
-public:
-
-
 private:
     GLFWwindow* window = nullptr;
+
     bool keys[512] = {};
-    bool prevKeys[512] = {};
+    bool pressed[512] = {};
+    bool released[512] = {};
 
     bool mouse[8] = {};
-    bool prevMouse[8] = {};
 
     double mx = 0.0, my = 0.0;
     double scrollYAccum = 0.0;
     int    scrollYSteps = 0;
-
-
 };
