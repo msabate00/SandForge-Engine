@@ -8,9 +8,7 @@
 #include "core/engine.h"
 #include "core/input.h"
 #include "render/renderer.h"
-
-
-
+#include "ui/ui.h"
 
 
 // Constructor
@@ -19,6 +17,7 @@ App::App(int argc, char* args[]) : argc(argc), args(args)
 	engine = new Engine(this);
 	renderer = new Renderer(this);
 	input = new Input(this);
+	ui = new UI(this);
 }
 
 App::~App()
@@ -46,9 +45,12 @@ bool App::Awake()
 	engine->Awake();
 	registerDefaultMaterials();
 	renderer->Awake();
+	ui->Awake();
 
 	input->Awake();
 	input->SetupWindow(window);
+
+	
 
 
 	return ret;
@@ -60,6 +62,8 @@ bool App::Start()
 
 	engine->Start();
 	renderer->Start();
+	input->Start();
+	ui->Start();
 
 
 	return ret;
@@ -86,6 +90,12 @@ bool App::Update()
 		input->ProcessBindings(brushMat, brushSize); 
 		engine->Update(dt);
 		renderer->Update(dt);
+		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
+
+		ui->Begin(windowSize.x, windowSize.y);
+		ui->Draw(brushSize, brushMat);
+		ui->End();
+
 		input->EndFrame();
 
 		frames++;
@@ -109,6 +119,11 @@ bool App::Update()
 bool App::CleanUp()
 {
 	bool ret = true;
+
+	ui->CleanUp();
+	input->CleanUp();
+	renderer->CleanUp();
+	engine->CleanUp();
 
 
 	return ret;

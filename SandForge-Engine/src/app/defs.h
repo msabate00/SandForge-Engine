@@ -51,3 +51,5 @@ struct RGBAI {
     float i = 0;
 
 };
+
+struct Vertex { float x, y; uint32 rgba; };

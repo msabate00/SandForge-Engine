@@ -6,6 +6,7 @@ class GLFWwindow;
 class Engine;
 class Renderer;
 class Input;
+class UI;
 
 class App
 {
@@ -33,6 +34,7 @@ public:
 	Engine* engine;
 	Renderer* renderer;
 	Input* input;
+	UI* ui;
 
 
 
