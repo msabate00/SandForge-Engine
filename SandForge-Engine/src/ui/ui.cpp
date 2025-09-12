@@ -63,6 +63,10 @@ void UI::Begin(int viewW, int viewH) {
 }
 
 void UI::Draw(int& brushSize, Material& brushMat) {
+
+	const MatProps actualMat = matProps((uint8)brushMat);
+
+
 	float pad = 8.0f, y = 8.0f, x = 8.0f, btn = 28.0f;
 	auto makeBtn = [&](uint32 base) {
 		uint32 h = MulRGBA(base, 1.15f), a = MulRGBA(base, 0.85f);
@@ -81,6 +85,8 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 
 	}
 
+
+
 	x += 8.0f;
 
 	if (app->engine->paused) {
@@ -95,6 +101,8 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 	x += 12.0f; float bx = x, bw = 200.0f, bh = 20.0f; float v = (float)brushSize;
 	Slider(bx, y + 4.0f, bw, bh, 1.0f, 64.0f, v, RGBAu32(90, 90, 100, 200), RGBAu32(230, 230, 240, 240));
 	brushSize = (int)(v + 0.5f);
+
+	Ring(mx, my, brushSize, 2, RGBAu32(actualMat.color.r, actualMat.color.g, actualMat.color.b, 100), 12);
 
 }
 
@@ -159,6 +167,50 @@ bool UI::Slider(float x, float y, float w, float h,
 	bool hover = (mx >= x && mx <= x + w && my >= y && my <= y + h);
 	if (hover && md) { v = minv + float((mx - x) / w) * (maxv - minv); mouseConsumed = true; }
 	return hover && !md && mdPrev; // soltado sobre el slider
+}
+
+void UI::Circle(float cx, float cy, float r, uint32 c, int segments) {
+
+	float rx = r * (float)app->windowSize.x / (float)app->gridSize.x;
+	float ry = r * (float)app->windowSize.y / (float)app->gridSize.y;
+
+	if (rx <= 0 || ry <= 0) return;
+
+	int n = segments > 0 ? segments : std::max(12, std::min(128, int((6.2831853f * std::max(rx, ry)) / 8.0f)));
+	const float dA = 6.2831853f / n;
+
+	verts.reserve(verts.size() + 3 * n);
+	Vertex center{ cx, cy, c };
+
+	float px = cx + rx, py = cy;
+	for (int i = 1;i <= n;++i) {
+		float a = i * dA, x = cx + std::cos(a) * rx, y = cy + std::sin(a) * ry;
+		verts.push_back(center); verts.push_back({ px,py,c }); verts.push_back({ x,y,c });
+		px = x; py = y;
+	}
+}
+
+
+void UI::Ring(float cx, float cy, float r, float t, uint32 c, int segments) {
+
+	float rx = r * (float)app->windowSize.x / (float)app->gridSize.x;
+	float ry = r * (float)app->windowSize.y / (float)app->gridSize.y;
+
+	if (t <= 0 || rx <= 0 || ry <= 0) return;
+
+	float rx0 = std::max(0.0f, rx - t * 0.5f), ry0 = std::max(0.0f, ry - t * 0.5f);
+	float rx1 = rx + t * 0.5f, ry1 = ry + t * 0.5f;
+	int n = segments > 0 ? segments : std::max(12, std::min(128, int((6.2831853f * std::max(rx, ry)) / 8.0f)));
+	float dA = 6.2831853f / n;
+	float p0x = cx + rx0, p0y = cy, p1x = cx + rx1, p1y = cy;
+	for (int i = 1;i <= n;++i) {
+		float a = i * dA;
+		float x0 = cx + std::cos(a) * rx0, y0 = cy + std::sin(a) * ry0;
+		float x1 = cx + std::cos(a) * rx1, y1 = cy + std::sin(a) * ry1;
+		verts.push_back({ p0x,p0y,c }); verts.push_back({ p1x,p1y,c }); verts.push_back({ x1,y1,c });
+		verts.push_back({ p0x,p0y,c }); verts.push_back({ x1,y1,c });   verts.push_back({ x0,y0,c });
+		p0x = x0; p0y = y0; p1x = x1; p1y = y1;
+	}
 }
 
 

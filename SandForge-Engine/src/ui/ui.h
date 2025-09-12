@@ -33,6 +33,8 @@ public:
     bool Slider(float x, float y, float w, float h,
         float minv, float maxv, float& v, uint32_t track, uint32_t knob);
 
+    void Circle(float cx, float cy, float r, uint32 c, int segments = 0);
+    void Ring(float cx, float cy, float r, float t, uint32 c, int segments = 0);
 
 
     void Rect(float x, float y, float w, float h, uint32_t rgba);
