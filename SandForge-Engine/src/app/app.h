@@ -43,6 +43,8 @@ public:
 	Vec2<int> windowSize{ 1280, 720 };
 	Vec2<int> gridSize{ 320, 180 };
 
+	int frames; //para los randBit determinista y contador de fps
+
 private:
 	int argc;
 	char** args;

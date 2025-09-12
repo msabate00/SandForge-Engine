@@ -1,6 +1,7 @@
 #include <array>
 #include "material.h"
 #include "engine.h"
+#include "app/app.h"
 
 static std::array<MatProps, 256> g_mat{};
 
@@ -27,7 +28,7 @@ static void SandUpdate(Engine& E, int x, int y, const Cell& self) {
 static void WaterUpdate(Engine& E, int x, int y, const Cell& self) {
     if (E.tryMove(x, y, 0, +1, self)) return;
 
-    bool leftFirst = E.randbit(x, y , rand());
+    bool leftFirst = E.randbit(x, y , app->frames);
     int da = leftFirst ? -1 : +1, db = -da;
 
     if (E.GetCell(x + da, y + 1).m == (uint8)Material::Empty && E.tryMove(x, y, da, +1, self)) return;
@@ -84,7 +85,7 @@ static void FireUpdate(Engine& E, int x, int y, const Cell& self) {
 static void LavaUpdate(Engine& E, int x, int y, const Cell& self) {
     if (E.tryMove(x, y, 0, +1, self)) return;
 
-    bool leftFirst = E.randbit(x, y, 0);;
+    bool leftFirst = E.randbit(x, y, app->frames);;
     int da = leftFirst ? -1 : +1, db = -da;
 
     if (E.GetCell(x + da, y + 1).m == (uint8)Material::Empty && E.tryMove(x, y, da, +1, self)) return;
@@ -115,7 +116,7 @@ static void SmokeUpdate(Engine& E, int x, int y, const Cell& self) {
 }
 
 static void SteamUpdate(Engine& E, int x, int y, const Cell& self) {
-    bool leftFirst = E.randbit(x, y, rand());;
+    bool leftFirst = E.randbit(x, y, app->frames);
     int dxa = leftFirst ? -1 : +1, dxb = -dxa;
 
     if (E.tryMove(x, y, dxa, -1, self)) return;

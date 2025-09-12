@@ -80,7 +80,7 @@ bool App::Update()
 
 	Timer timer = Timer();
 	double fpsTimer = 0.0;
-	int frames = 0;
+	frames = 0;
 
 	Material brushMat = Material::Sand;
 	int brushSize = 2;
