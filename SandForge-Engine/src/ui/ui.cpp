@@ -38,6 +38,7 @@ bool UI::Awake() {
 
 }
 bool UI::Start() {
+
     return true;
 }
 bool UI::PreUpdate() { return true; }

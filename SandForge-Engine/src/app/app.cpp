@@ -80,6 +80,8 @@ bool App::Update()
 	Material brushMat = Material::Sand;
 	int brushSize = 2;
 
+	
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -88,6 +90,16 @@ bool App::Update()
 
 		input->BeginFrame();
 		input->ProcessBindings(brushMat, brushSize); 
+
+		//TODO - Mouse hide/show
+		if (input->MouseY() > 50) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+		}
+		else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+
+
 		engine->Update(dt);
 		renderer->Update(dt);
 		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
