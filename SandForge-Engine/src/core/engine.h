@@ -33,15 +33,10 @@ public:
     }
 
     void Engine::Paint(int cx, int cy, Material m, int r);
+    void Engine::StopPaint();
 
     bool InRange(int x, int y) const { return x >= 0 && x < gridW && y >= 0 && y < gridH; }
     bool Engine::randbit(int x, int y, int parity);
-
-    bool TakeAudioEvents(std::vector<AudioEvent>& out) {
-        if (audioEvents.empty()) return false;
-        out.swap(audioEvents);
-        return true;
-    }
 
 private:
 
@@ -57,9 +52,6 @@ public:
     int parity = 0;
 
 private:
-
-    std::vector<AudioEvent> audioEvents;
-
     std::vector<Cell> front, back;
     std::vector<uint8> mFront, mBack;
     int gridW, gridH;
@@ -67,5 +59,6 @@ private:
     float elapsedTimeSinceStep = 0;
     static constexpr float fixedTimeStep = 1.f / 120.f;
 
+    AudioInstance paintInstance{};
 
 };

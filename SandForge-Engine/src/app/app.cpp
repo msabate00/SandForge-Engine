@@ -68,7 +68,7 @@ bool App::Start()
 	renderer->Start();
 	input->Start();
 	ui->Start();
-	audio->Start();
+	audio->Start(); //se puede quitar
 
 
 	return ret;
@@ -106,7 +106,9 @@ bool App::Update()
 
 
 		engine->Update(dt);
-		audio->Update(dt);
+
+		audio->Update(dt); //se puede quitar
+
 		renderer->Update(dt);
 		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
 
@@ -142,7 +144,7 @@ bool App::CleanUp()
 	input->CleanUp();
 	renderer->CleanUp();
 	engine->CleanUp();
-
+	audio->CleanUp();
 
 	return ret;
 }

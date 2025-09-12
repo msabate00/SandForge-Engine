@@ -28,7 +28,8 @@ public:
     bool KeyDown(int key)   const { return pressed[key]; }
     bool KeyUp(int key)     const { return released[key]; }
 
-    bool MouseDown(int button) const { return mouse[button]; }
+    bool MouseDown(int button) const { return mouseDown[button]; }
+    bool MouseUp(int button) const { return mouseUp[button]; }
 
     double MouseX() const { return mx; }
     double MouseY() const { return my; }
@@ -47,7 +48,8 @@ private:
     bool pressed[512] = {};
     bool released[512] = {};
 
-    bool mouse[8] = {};
+    bool mouseDown[8] = {};
+    bool mouseUp[8] = {};
 
     double mx = 0.0, my = 0.0;
     double scrollYAccum = 0.0;

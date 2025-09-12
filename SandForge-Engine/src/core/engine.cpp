@@ -153,7 +153,26 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
             }
         }
    /* markDirtyRect(xmin, ymin, xmax, ymax);*/
-    audioEvents.push_back({ AudioEvent::Type::Paint, cx, cy });
+
+
+    if (!paintInstance) {
+        paintInstance = app->audio->Play("paint", 0, 0, 1.0, true);
+    }
+    else {
+        if (!app->audio->IsPlaying("paint", paintInstance)) {
+            app->audio->Resume("paint", paintInstance);
+        }
+        app->audio->SetVoicePosition("paint", paintInstance, cx, 0);
+    }
+    
+
+}
+
+void Engine::StopPaint()
+{
+    if (paintInstance && app->audio->IsPlaying("paint", paintInstance)) {
+        app->audio->Pause("paint", paintInstance);
+    }
 }
 
 bool Engine::randbit(int x, int y, int parity) {

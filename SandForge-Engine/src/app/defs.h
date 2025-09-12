@@ -9,6 +9,7 @@ typedef int8_t int8;
 typedef std::uint8_t uint8;
 typedef unsigned int uint;
 typedef unsigned char uchar;
+typedef unsigned __int16 uint16;
 typedef unsigned __int32 uint32;
 typedef unsigned __int64 uint64;
 

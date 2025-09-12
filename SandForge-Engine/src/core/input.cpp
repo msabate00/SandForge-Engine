@@ -36,6 +36,7 @@ void Input::EndFrame() {
 
     std::fill(std::begin(pressed), std::end(pressed), false);
     std::fill(std::begin(released), std::end(released), false);
+    std::fill(std::begin(mouseUp), std::end(mouseUp), false);
 
 }
 
@@ -53,6 +54,9 @@ void Input::ProcessBindings(Material& brushMat, int& brushSize) {
 
     if (this->MouseDown(GLFW_MOUSE_BUTTON_1)) {
         app->engine->Paint(MouseX(), MouseY(), brushMat, brushSize);
+    }
+    if (this->MouseUp(GLFW_MOUSE_BUTTON_1)) {
+        app->engine->StopPaint();
     }
 
     if (this->ScrollSteps() != 0) {
@@ -85,8 +89,11 @@ void Input::SMouseBtn(GLFWwindow* w, int button, int action, int) {
     if (button < 0 || button >= 8) return;
     auto* self = static_cast<Input*>(glfwGetWindowUserPointer(w));
     if (!self) return;
-    if (action == GLFW_PRESS) self->mouse[button] = true;
-    else if (action == GLFW_RELEASE) self->mouse[button] = false;
+    if (action == GLFW_PRESS) self->mouseDown[button] = true;
+    else if (action == GLFW_RELEASE) {
+        self->mouseDown[button] = false;
+        self->mouseUp[button] = true;
+    } 
 }
 
 void Input::SScroll(GLFWwindow* w, double, double yoff) {
