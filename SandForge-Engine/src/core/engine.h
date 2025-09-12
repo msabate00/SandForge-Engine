@@ -3,12 +3,8 @@
 #include <vector>
 #include <cstdint>
 #include "material.h"
+#include "audio/audio.h"
 
-struct AudioEvent {
-    enum Type { Ignite, Paint };
-    Type type;
-    int x, y;
-};
 
 
 class Engine : public Module {
@@ -41,6 +37,12 @@ public:
     bool InRange(int x, int y) const { return x >= 0 && x < gridW && y >= 0 && y < gridH; }
     bool Engine::randbit(int x, int y, int parity);
 
+    bool TakeAudioEvents(std::vector<AudioEvent>& out) {
+        if (audioEvents.empty()) return false;
+        out.swap(audioEvents);
+        return true;
+    }
+
 private:
 
     void Step();
@@ -55,11 +57,15 @@ public:
     int parity = 0;
 
 private:
+
+    std::vector<AudioEvent> audioEvents;
+
     std::vector<Cell> front, back;
     std::vector<uint8> mFront, mBack;
     int gridW, gridH;
 
     float elapsedTimeSinceStep = 0;
     static constexpr float fixedTimeStep = 1.f / 120.f;
+
 
 };

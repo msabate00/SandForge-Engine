@@ -152,8 +152,8 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
                 //markDirty(x, y);
             }
         }
-   /* markDirtyRect(xmin, ymin, xmax, ymax);
-    audioEvents.push_back({ AudioEvent::Type::Paint, cx, cy });*/
+   /* markDirtyRect(xmin, ymin, xmax, ymax);*/
+    audioEvents.push_back({ AudioEvent::Type::Paint, cx, cy });
 }
 
 bool Engine::randbit(int x, int y, int parity) {

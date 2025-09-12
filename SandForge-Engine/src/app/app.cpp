@@ -18,7 +18,9 @@ App::App(int argc, char* args[]) : argc(argc), args(args)
 	renderer = new Renderer(this);
 	input = new Input(this);
 	ui = new UI(this);
+	audio = new Audio(this);
 }
+
 
 App::~App()
 {
@@ -50,6 +52,8 @@ bool App::Awake()
 	input->Awake();
 	input->SetupWindow(window);
 
+	audio->Awake();
+
 	
 
 
@@ -64,6 +68,7 @@ bool App::Start()
 	renderer->Start();
 	input->Start();
 	ui->Start();
+	audio->Start();
 
 
 	return ret;
@@ -101,6 +106,7 @@ bool App::Update()
 
 
 		engine->Update(dt);
+		audio->Update(dt);
 		renderer->Update(dt);
 		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
 

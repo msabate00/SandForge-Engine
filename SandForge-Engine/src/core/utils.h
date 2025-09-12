@@ -4,6 +4,8 @@
 
 std::string readTextFile(const char* path);
 
+static float clamp01(float v) { return v < 0.f ? 0.f : (v > 1.f ? 1.f : v); }
+
 static unsigned int makeShader(unsigned int type, const char* src) {
     unsigned int s = glCreateShader(type);
     glShaderSource(s, 1, &src, nullptr);

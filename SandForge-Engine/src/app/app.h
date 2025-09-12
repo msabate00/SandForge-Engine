@@ -7,6 +7,7 @@ class Engine;
 class Renderer;
 class Input;
 class UI;
+class Audio;
 
 class App
 {
@@ -35,6 +36,7 @@ public:
 	Renderer* renderer;
 	Input* input;
 	UI* ui;
+	Audio* audio;
 
 
 
