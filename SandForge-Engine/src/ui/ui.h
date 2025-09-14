@@ -29,15 +29,16 @@ public:
 
 
     bool Button(float x, float y, float w, float h,
-        uint32_t rgba, uint32_t rgbaHover, uint32_t rgbaActive);
+        uint32 rgba, uint32 rgbaHover, uint32 rgbaActive);
     bool Slider(float x, float y, float w, float h,
-        float minv, float maxv, float& v, uint32_t track, uint32_t knob);
+        float minv, float maxv, float& v, uint32 track, uint32 knob);
 
     void Circle(float cx, float cy, float r, uint32 c, int segments = 0);
     void Ring(float cx, float cy, float r, float t, uint32 c, int segments = 0);
 
 
-    void Rect(float x, float y, float w, float h, uint32_t rgba);
+    void Rect(float x, float y, float w, float h, uint32 rgba);
+    void RectBorders(float x, float y, float w, float h, float t, uint32 rgba);
 
 private:
 

@@ -14,10 +14,17 @@ bool Engine::Awake() {
 	gridW = app->gridSize.x;
 	gridH = app->gridSize.y;
 
+    chunksW = (gridW + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    chunksH = (gridH + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
 	front.assign(gridW * gridH, Cell{ (uint8)Material::Empty,0 });
-	back.assign(gridW * gridH, Cell{ (uint8)Material::Empty,0 });
+	back.assign(gridW * gridH, Cell{ (uint8)Material::Null,0 });
     mFront.assign(gridW * gridH, (uint8)Material::Empty);
     mBack.assign(gridW * gridH, (uint8)Material::Empty);
+
+    chunkDirtyNow.assign(chunksW * chunksH, 1);
+    chunkDirtyNext.assign(chunksW * chunksH, 0);
+    chunkDirtyGPU.assign(chunksW * chunksH, 1);
 
 	return true;
 
@@ -68,15 +75,23 @@ bool Engine::tryMove(int x0, int y0, int x1, int y1, const Cell& c)
     if (!InRange(nx, ny)) return false;
     int si = LinearIndex(x0, y0), ni = LinearIndex(nx, ny);
 
+    if (front[ni].m != (uint8)Material::Empty) return false; //VIGILAR ver que pasa descometado
     if (back[ni].m != (uint8)Material::Empty) return false;
    
 
     back[ni] = c;
-    if (back[si].m == front[si].m) back[si].m = (uint8)Material::Empty;
-
-
     mBack[ni] = c.m;
-    mBack[si] = (uint8)Material::Empty;
+    if (back[si].m == front[si].m) {
+        back[si].m = (uint8)Material::Empty;
+        mBack[si] = (uint8)Material::Empty;
+    } 
+
+    MarkChunkSim(x0, y0); MarkChunkSim(nx, ny);
+    MarkChunkGPU(x0, y0); MarkChunkGPU(nx, ny);
+    
+    
+    MarkChunksNeighborIfBorder(x0, y0);
+    MarkChunksNeighborIfBorder(nx, ny);
 
     return true;
 }
@@ -92,11 +107,22 @@ bool Engine::trySwap(int x0, int y0, int x1, int y1, const Cell& c)
 
     const Cell& dst = front[ni];
 
+    if (dst.m == (uint8)Material::Empty) return false; //No se puede intercambiar con empties
+    if (matProps(c.m).density <= matProps(dst.m).density) return false; //No se puede intercambiar por densidad //Lo podria quitar realmetne
+    if (back[ni].m != front[ni].m) return false;
+
     back[ni] = c;
     back[si] = dst;
-
     mBack[ni] = c.m;
     mBack[si] = dst.m;
+
+    MarkChunkSim(x0, y0); MarkChunkSim(nx, ny);
+    MarkChunkGPU(x0, y0); MarkChunkGPU(nx, ny);
+
+
+    MarkChunksNeighborIfBorder(x0, y0);
+    MarkChunksNeighborIfBorder(nx, ny);
+
     return true;
 }
 
@@ -104,30 +130,121 @@ void Engine::SetCell(int x, int y, uint8 m)
 {
     if (!InRange(x, y)) return;
     int i = LinearIndex(x, y);
-    uint8 prev = back[i].m;
-    if (prev == m) return;
+    if (back[i].m == m) return;
 
-    back[i].m = m;  mBack[i] = m;
+    back[i].m = m; 
+    mBack[i] = m;
+
+    MarkChunkSim(x, y);
+    MarkChunkGPU(x, y);
+    MarkChunksNeighborIfBorder(x, y);
+
+
 }
 
 
 
 void Engine::Step() {
 
-    for (int y = gridH - 1; y >= 0; --y) {
-        bool l2r = ((y ^ parity) & 1);
-        int x0 = l2r ? 0 : (gridW - 1);
-        int x1 = l2r ? gridW : -1;
-        int s = l2r ? 1 : -1;
+    //FIX - EL ORDEN EN LO QUE SE LEEN LOS CHUNKS ES UN PROBLEMA, POR ESO LE PASA ESO A LA ARENA
+    for (int ci = 0; ci < chunkDirtyNow.size(); ci++) {
+        if (!chunkDirtyNow[ci]) continue;
+        int cX, cY, cW, cH;
+        GetChunkRect(ci, cX, cY, cW, cH);
+        int x0 = cX;
+        int y0 = cY;
+        int x1 = cX + cW;
+        int y1 = cY + cH;
 
-        for (int x = x0; x != x1; x += s) {
-            const Cell c = front[LinearIndex(x, y)];
-            if (c.m == (uint8)Material::Empty) continue;
-            const MatProps& mp = matProps(c.m);
-            if (mp.update) mp.update(*this, x, y, c);
+        for (int y = y1 - 1; y >= y0; y--) {
+            bool l2r = ((y ^ parity) & 1);
+            int xs = l2r ? x0 : (x1 - 1);
+            int xe = l2r ? x1 : (x0 - 1);
+            int inc = l2r ? 1 : -1;
+
+            for (int x = xs; x != xe; x += inc) {
+                const Cell c = front[LinearIndex(x, y)];
+                if (c.m == (uint8)Material::Empty) continue;
+
+                const MatProps& mp = matProps(c.m);
+                if (mp.update) mp.update(*this, x, y, c);
+
+            }
+
         }
     }
 
+    std::fill(chunkDirtyNow.begin(), chunkDirtyNow.end(), 0);
+    chunkDirtyNow.swap(chunkDirtyNext);
+    std::fill(chunkDirtyNext.begin(), chunkDirtyNext.end(), 0);
+}
+
+int Engine::ChunkIndexByCell(int x, int y) const
+{
+
+    if (!InRange(x, y)) return -1; //VIGILAR Hay que ver que pasa al devolver -1 en todos los casos
+    int chunkX = x / CHUNK_SIZE;
+    int chunkY = y / CHUNK_SIZE;
+
+    return chunkY * chunksW + chunkX;
+}
+
+void Engine::MarkChunksInRect(int x, int y, int w, int h)
+{
+    int minX = std::max(0, x);
+    int minY = std::max(0, y);
+    int maxX = std::min(gridW, x + w);
+    int maxY = std::min(gridH, y + h);
+
+    //if (minX >= maxX || minY >= maxY) return; //VER QUE PASA SIN ESTO
+
+    int minCX = minX / CHUNK_SIZE;
+    int minCY = minY / CHUNK_SIZE;
+    int maxCX = (maxX + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int maxCY = (maxY + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+
+    if (minCX < 0) minCX = 0;
+    if (minCY < 0) minCY = 0;
+    if (maxCX > chunksW) maxCX = chunksW;
+    if (maxCY > chunksH) maxCY = chunksH;
+
+    for (int cy = minCY; cy < maxCY; cy++) {
+        for (int cx = minCX; cx < maxCX; cx++) {
+
+            int ci = cy * chunksW + cx;
+
+            MarkChunkSim(ci);
+            MarkChunkGPU(ci);
+            chunkDirtyNow[ci] = 1;
+
+        }
+    }
+}
+
+void Engine::MarkChunksNeighborIfBorder(int x, int y)
+{
+    int cx = x % CHUNK_SIZE, cy = y % CHUNK_SIZE;
+
+
+    if (cx == 0) { MarkChunkSim(x - 1, y); } 
+    else if (cx == CHUNK_SIZE - 1) { MarkChunkSim(x + 1, y); }
+
+    if (cy == 0) { MarkChunkSim(x, y - 1); }
+    else if (cy == CHUNK_SIZE - 1) { MarkChunkSim(x, y + 1); }
+
+}
+
+void Engine::GetChunkRect(int ci, int& x, int& y, int& w, int& h)
+{
+    if (ci < 0) { x = y = w = h = 0; return; }
+
+    int cx = ci % chunksW;
+    int cy = ci / chunksW;
+    x = cx * CHUNK_SIZE;  
+    y = cy * CHUNK_SIZE;
+    w = std::min(gridW, x + CHUNK_SIZE) - x;
+    h = std::min(gridH, y + CHUNK_SIZE) - y;
 }
 
 void Engine::Paint(int cx, int cy, Material m, int r) {
@@ -153,6 +270,7 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
             }
         }
    /* markDirtyRect(xmin, ymin, xmax, ymax);*/
+    MarkChunksInRect(xmin, ymin, xmax - xmin, ymax - ymin);
 
 
     if (!paintInstance) {

@@ -105,6 +105,28 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 
 	Ring(mx, my, brushSize, 2, RGBAu32(actualMat.color.r, actualMat.color.g, actualMat.color.b, 100), 12);
 
+
+	std::vector<uint> chunks = app->engine->GetChunks();
+	for (int ci = 0; ci < chunks.size(); ci++) {
+		int x, y, w, h;
+		app->engine->GetChunkRect(ci, x, y, w, h);
+
+		x = int((x / double(app->gridSize.x)) * app->windowSize.x);
+		y = int((y / double(app->gridSize.y)) * app->windowSize.y);
+		w = int((w / double(app->gridSize.x)) * app->windowSize.x);
+		h = int((h / double(app->gridSize.y)) * app->windowSize.y);
+
+		if (chunks[ci]) {
+			
+			RectBorders(x, y, w, h, 4, RGBAu32(230, 130, 130, 200));
+
+		}
+		else {
+			RectBorders(x, y, w, h, 2, RGBAu32(230, 230, 230, 100));
+		}
+	}
+
+
 }
 
 void UI::End() { Flush(); }
@@ -137,6 +159,18 @@ void UI::Rect(float x, float y, float w, float h, uint32 c) {
 	{x, y, c}, {x + w, y + h, c}, {x, y + h, c},
 	};
 	verts.insert(verts.end(), v, v + 6);
+}
+
+void UI::RectBorders(float x, float y, float w, float h, float t, uint32 rgba)
+{
+
+	float tM = (t / 2);
+	Rect(x - tM, y - tM, w, tM, rgba);
+	Rect(x - tM, (y+h) - tM, w, tM, rgba);
+
+	Rect(x - tM, y - tM, tM, h, rgba);
+	Rect((x+w) - tM, y- tM, tM, h, rgba);
+
 }
 
 

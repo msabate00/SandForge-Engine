@@ -29,20 +29,34 @@ public:
     void SetCell(int x, int y, uint8 m);
 
     Cell GetCell(int x, int y) {
-        return (InRange(x, y)) ? front[LinearIndex(x, y)] : Cell{ (uint8)Material::NullCell };
+        return (InRange(x, y)) ? front[LinearIndex(x, y)] : Cell{ (uint8)Material::Null };
     }
 
-    void Engine::Paint(int cx, int cy, Material m, int r);
-    void Engine::StopPaint();
+    void Paint(int cx, int cy, Material m, int r);
+    void StopPaint();
 
     bool InRange(int x, int y) const { return x >= 0 && x < gridW && y >= 0 && y < gridH; }
-    bool Engine::randbit(int x, int y, int parity);
+    bool randbit(int x, int y, int parity);
+
+    std::vector<uint> GetChunks() { return chunkDirtyNow; };
+    void GetChunkRect(int chunkIndex, int& x, int& y, int& w, int& h);
 
 private:
 
     void Step();
 
     int LinearIndex(int x, int y) const { return y * gridW + x; };
+
+    int ChunkIndexByCell(int x, int y) const;
+    void MarkChunkSim(int x, int y) { int ci = ChunkIndexByCell(x, y); if (ci >= 0) chunkDirtyNext[ci] = 1; }
+    void MarkChunkSim(int ci) { if (ci >= 0) chunkDirtyNext[ci] = 1; }
+    void MarkChunkGPU(int x, int y) { int ci = ChunkIndexByCell(x, y); if (ci >= 0) chunkDirtyGPU[ci] = 1; }
+    void MarkChunkGPU(int ci) { if (ci >= 0) chunkDirtyGPU[ci] = 1; }
+    void MarkChunksInRect(int x, int y, int w, int h);
+    void MarkChunksNeighborIfBorder(int x, int y);
+
+
+    
 
     
 
@@ -54,10 +68,17 @@ public:
 private:
     std::vector<Cell> front, back;
     std::vector<uint8> mFront, mBack;
+
+    std::vector<uint> chunkDirtyNow, chunkDirtyNext;
+    std::vector<uint> chunkDirtyGPU;
+
+
     int gridW, gridH;
+    int chunksW, chunksH;
 
     float elapsedTimeSinceStep = 0;
     static constexpr float fixedTimeStep = 1.f / 120.f;
+    static constexpr int CHUNK_SIZE = 16;
 
     AudioInstance paintInstance{};
 

@@ -6,7 +6,7 @@
 
 struct Engine;
 
-enum Material : uint8 { NullCell = -1, Empty = 0, Sand, Water, Stone, Wood, Fire, Lava, Smoke, Steam, NpcCell };
+enum Material : uint8 { Null = -1, Empty = 0, Sand, Water, Stone, Wood, Fire, Lava, Smoke, Steam, NpcCell };
 
 struct Cell {
     uint8 m = (uint8)Material::Empty;
