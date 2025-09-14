@@ -87,18 +87,27 @@ bool Renderer::PreUpdate() { return true; }
 bool Renderer::Update(float dt) {
 
     
-    int rx = 0, ry = 0, rw = app->gridSize.x, rh = app->gridSize.y;
-    
-    Draw(app->engine->GetFrontPlane(), app->gridSize.x, app->gridSize.y, app->windowSize.x, app->windowSize.y, rx, ry, rw, rh);
+    int rx = 0, ry = 0, rw = 0, rh = 0;
+    bool uploadedDirty = false;
 
+    while (app->engine->PopChunkDirtyGPURect(rx, ry, rw, rh)) {
+        Draw(app->engine->GetFrontPlane(), app->gridSize.x, app->gridSize.y, rx, ry, rw, rh);
+        uploadedDirty = true;
+    }
 
+    if (!uploadedDirty && !texValid) {
+        Draw(app->engine->GetFrontPlane(), app->gridSize.x, app->gridSize.y, 0, 0, 0, 0);
+        
+    }
+
+    DrawGrid(std::vector<uint8>{}, app->gridSize.x, app->gridSize.y , app->windowSize.x, app->windowSize.y);
 
     return true;
 }
 bool Renderer::PostUpdate() { return true; }
 bool Renderer::CleanUp() { return true; }
 
-void Renderer::Draw(const uint8* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh)
+void Renderer::Draw(const uint8* planeM, int gridW, int gridH, int x0, int y0, int rw, int rh)
 {
     if (!texValid || texW != gridW || texH != gridH) {
         uploadFullCPU(planeM, gridW, gridH);
@@ -112,8 +121,6 @@ void Renderer::Draw(const uint8* planeM, int gridW, int gridH, int viewW, int vi
         }
         uploadRectPBO(scratchRect.data(), rw, rh, x0, y0, gridW, gridH);
     }
-
-    DrawGrid(std::vector<uint8>{}, gridW, gridH, viewW, viewH);
 }
 
 

@@ -40,6 +40,7 @@ public:
 
     std::vector<uint> GetChunks() { return chunkDirtyNow; };
     void GetChunkRect(int chunkIndex, int& x, int& y, int& w, int& h);
+    bool PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh);
 
 private:
 

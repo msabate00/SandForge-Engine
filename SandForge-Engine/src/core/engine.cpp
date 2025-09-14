@@ -289,6 +289,29 @@ void Engine::GetChunkRect(int ci, int& x, int& y, int& w, int& h)
     h = std::min(gridH, y + CHUNK_SIZE) - y;
 }
 
+bool Engine::PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh)
+{
+    for (int cy = 0; cy < chunksH; cy++) {
+        int cx = 0;
+        while (cx < chunksW) {
+            while (cx < chunksW && !chunkDirtyGPU[cy * chunksW + cx]) cx++;
+            if (cx >= chunksW) break;
+            int sx = cx;
+            while (cx < chunksW && chunkDirtyGPU[cy * chunksW + cx]) {
+                chunkDirtyGPU[cy * chunksW + cx] = 0;
+                cx++;
+            }
+            x = sx * CHUNK_SIZE;
+            y = cy * CHUNK_SIZE;
+            rw = std::min(gridW - x, (cx - sx) * CHUNK_SIZE);
+            rh = std::min(gridH - y, CHUNK_SIZE);
+            return true;
+        }
+    }
+    x = y = rw = rh = 0;
+    return false;
+}
+
 void Engine::Paint(int cx, int cy, Material m, int r) {
 
     cx = int((cx / double(app->windowSize.x)) * gridW);

@@ -33,7 +33,7 @@ private:
 
 public:
 
-    void Draw(const uint8* planeM, int gridW, int gridH, int viewW, int viewH, int x0, int y0, int rw, int rh);
+    void Draw(const uint8* planeM, int gridW, int gridH, int x0, int y0, int rw, int rh);
 
 private:
     uint progGrid = 0, vao = 0, tex = 0;;
