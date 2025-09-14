@@ -25,6 +25,7 @@ bool Engine::Awake() {
     chunkDirtyNow.assign(chunksW * chunksH, 1);
     chunkDirtyNext.assign(chunksW * chunksH, 0);
     chunkDirtyGPU.assign(chunksW * chunksH, 1);
+    chunkTTL.assign(chunksW * chunksH, 0);
 
 	return true;
 
@@ -92,6 +93,12 @@ bool Engine::tryMove(int x0, int y0, int x1, int y1, const Cell& c)
     MarkChunksNeighborIfBorder(x0, y0);
     MarkChunksNeighborIfBorder(nx, ny);
 
+    //Chunk TTL
+    int c0 = ChunkIndexByCell(x0, y0);
+    int c1 = ChunkIndexByCell(nx, ny);
+    if (c0 >= 0) chunkTTL[c0] = std::max<uint8_t>(chunkTTL[c0], isVolatile(back[ni].m) ? TTL_VOL : TTL_MIN);
+    if (c1 >= 0) chunkTTL[c1] = std::max<uint8_t>(chunkTTL[c1], isVolatile(back[si].m) ? TTL_VOL : TTL_MIN);
+
     return true;
 }
 
@@ -121,6 +128,12 @@ bool Engine::trySwap(int x0, int y0, int x1, int y1, const Cell& c)
     MarkChunksNeighborIfBorder(x0, y0);
     MarkChunksNeighborIfBorder(nx, ny);
 
+    //Chunk TTL
+    int c0 = ChunkIndexByCell(x0, y0);
+    int c1 = ChunkIndexByCell(nx, ny);
+    if (c0 >= 0) chunkTTL[c0] = std::max<uint8_t>(chunkTTL[c0], isVolatile(dst.m) ? TTL_VOL : TTL_MIN);
+    if (c1 >= 0) chunkTTL[c1] = std::max<uint8_t>(chunkTTL[c1], isVolatile(c.m) ? TTL_VOL : TTL_MIN);
+
     return true;
 }
 
@@ -137,15 +150,14 @@ void Engine::SetCell(int x, int y, uint8 m)
     MarkChunkGPU(x, y);
     MarkChunksNeighborIfBorder(x, y);
 
-
+    //Chunk TTL
+    int c0 = ChunkIndexByCell(x, y);
+    if (c0 >= 0) chunkTTL[c0] = std::max<uint8_t>(chunkTTL[c0], isVolatile(m) ? TTL_VOL : TTL_MIN);
 }
 
 
 
 void Engine::Step() {
-
-    //FIX - EL ORDEN EN LO QUE SE LEEN LOS CHUNKS ES UN PROBLEMA, POR ESO LE PASA ESO A LA ARENA
-
 
     for (int cy = chunksH - 1; cy >= 0; cy--) {
         bool cl2r = ((cy ^ parity) & 1);
@@ -156,6 +168,9 @@ void Engine::Step() {
         for (int cx = cx0; cx != cx1; cx += cinc) {
             int ci = ChunkLinearIndex(cx, cy);
             if (!chunkDirtyNow[ci]) continue;
+
+            bool volatileSeen = false;
+
             int cX, cY, cW, cH;
             GetChunkRect(ci, cX, cY, cW, cH);
             int x0 = cX;
@@ -172,6 +187,7 @@ void Engine::Step() {
                 for (int x = xs; x != xe; x += inc) {
                     const Cell c = front[LinearIndex(x, y)];
                     if (c.m == (uint8)Material::Empty) continue;
+                    if (isVolatile(c.m)) volatileSeen = true;
 
                     const MatProps& mp = matProps(c.m);
                     if (mp.update) mp.update(*this, x, y, c);
@@ -179,46 +195,21 @@ void Engine::Step() {
                 }
 
             }
+            if (volatileSeen) chunkTTL[ci] = std::max<uint8>(chunkTTL[ci], TTL_VOL);
 
         }
 
 
     }
-
-
-
-
-    //Old
-    //for (int ci = 0; ci < chunkDirtyNow.size(); ci++) {
-    //    if (!chunkDirtyNow[ci]) continue;
-    //    int cX, cY, cW, cH;
-    //    GetChunkRect(ci, cX, cY, cW, cH);
-    //    int x0 = cX;
-    //    int y0 = cY;
-    //    int x1 = cX + cW;
-    //    int y1 = cY + cH;
-
-    //    for (int y = y1 - 1; y >= y0; y--) {
-    //        bool l2r = ((y ^ parity) & 1);
-    //        int xs = l2r ? x0 : (x1 - 1);
-    //        int xe = l2r ? x1 : (x0 - 1);
-    //        int inc = l2r ? 1 : -1;
-
-    //        for (int x = xs; x != xe; x += inc) {
-    //            const Cell c = front[LinearIndex(x, y)];
-    //            if (c.m == (uint8)Material::Empty) continue;
-
-    //            const MatProps& mp = matProps(c.m);
-    //            if (mp.update) mp.update(*this, x, y, c);
-
-    //        }
-
-    //    }
-    //}
-
     std::fill(chunkDirtyNow.begin(), chunkDirtyNow.end(), 0);
     chunkDirtyNow.swap(chunkDirtyNext);
     std::fill(chunkDirtyNext.begin(), chunkDirtyNext.end(), 0);
+    for (int ci = 0; ci < (int)chunkTTL.size(); ++ci) {
+        if (chunkTTL[ci]) {
+            chunkDirtyNow[ci] = 1;      
+            --chunkTTL[ci];
+        }
+    }
 }
 
 int Engine::ChunkIndexByCell(int x, int y) const

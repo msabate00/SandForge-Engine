@@ -25,3 +25,5 @@ struct MatProps {
 
 const MatProps& matProps(uint8 id);
 void registerDefaultMaterials();
+
+bool isVolatile(uint8 m);

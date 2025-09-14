@@ -52,6 +52,8 @@ void Input::ProcessBindings(Material& brushMat, int& brushSize) {
     if (this->KeyDown(GLFW_KEY_P)) app->engine->paused = !app->engine->paused;
     if (this->KeyDown(GLFW_KEY_N)) app->engine->stepOnce = true;
 
+    if (this->KeyDown(GLFW_KEY_F1)) app->showChunks = ~app->showChunks;
+
     if (this->MouseDown(GLFW_MOUSE_BUTTON_1)) {
         app->engine->Paint(MouseX(), MouseY(), brushMat, brushSize);
     }

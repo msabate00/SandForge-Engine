@@ -105,28 +105,25 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 
 	Ring(mx, my, brushSize, 2, RGBAu32(actualMat.color.r, actualMat.color.g, actualMat.color.b, 100), 12);
 
+	if (app->showChunks) {
+		std::vector<uint> chunks = app->engine->GetChunks();
+		for (int ci = 0; ci < chunks.size(); ci++) {
+			int x, y, w, h;
+			app->engine->GetChunkRect(ci, x, y, w, h);
 
-	std::vector<uint> chunks = app->engine->GetChunks();
-	for (int ci = 0; ci < chunks.size(); ci++) {
-		int x, y, w, h;
-		app->engine->GetChunkRect(ci, x, y, w, h);
+			x = int((x / double(app->gridSize.x)) * app->windowSize.x);
+			y = int((y / double(app->gridSize.y)) * app->windowSize.y);
+			w = int((w / double(app->gridSize.x)) * app->windowSize.x);
+			h = int((h / double(app->gridSize.y)) * app->windowSize.y);
 
-		x = int((x / double(app->gridSize.x)) * app->windowSize.x);
-		y = int((y / double(app->gridSize.y)) * app->windowSize.y);
-		w = int((w / double(app->gridSize.x)) * app->windowSize.x);
-		h = int((h / double(app->gridSize.y)) * app->windowSize.y);
-
-		if (chunks[ci]) {
-			
-			RectBorders(x, y, w, h, 4, RGBAu32(230, 130, 130, 200));
-
-		}
-		else {
-			RectBorders(x, y, w, h, 2, RGBAu32(230, 230, 230, 100));
+			if (chunks[ci]) {
+				RectBorders(x, y, w, h, 4, RGBAu32(230, 130, 130, 200));
+			}
+			else {
+				RectBorders(x, y, w, h, 2, RGBAu32(230, 230, 230, 100));
+			}
 		}
 	}
-
-
 }
 
 void UI::End() { Flush(); }

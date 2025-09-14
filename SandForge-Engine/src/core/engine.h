@@ -57,11 +57,6 @@ private:
     void MarkChunksInRect(int x, int y, int w, int h);
     void MarkChunksNeighborIfBorder(int x, int y);
 
-
-    
-
-    
-
 public:
     bool paused = false;
     bool stepOnce = false;
@@ -73,6 +68,7 @@ private:
 
     std::vector<uint> chunkDirtyNow, chunkDirtyNext;
     std::vector<uint> chunkDirtyGPU;
+    std::vector<uint8> chunkTTL;
 
 
     int gridW, gridH;
@@ -81,6 +77,8 @@ private:
     float elapsedTimeSinceStep = 0;
     static constexpr float fixedTimeStep = 1.f / 120.f;
     static constexpr int CHUNK_SIZE = 16;
+    static constexpr uint8_t TTL_MIN = 2;         
+    static constexpr uint8_t TTL_VOL = 32;
 
     AudioInstance paintInstance{};
 

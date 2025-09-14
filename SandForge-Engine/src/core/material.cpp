@@ -153,3 +153,11 @@ void registerDefaultMaterials() {
 
     g_mat[(uint8)Material::NpcCell] = { "Spawn",    {220, 40, 200,255},           0,                 nullptr };
 }
+
+bool isVolatile(uint8 m)
+{
+    {
+        return m == (uint8)Material::Fire || m == (uint8)Material::Smoke
+            || m == (uint8)Material::Steam;
+    }
+}

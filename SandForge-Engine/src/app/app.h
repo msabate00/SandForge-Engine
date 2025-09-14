@@ -44,6 +44,7 @@ public:
 	Vec2<int> gridSize{ 320, 180 };
 
 	int frames; //para los randBit determinista y contador de fps
+	uint8 showChunks = 0;
 
 private:
 	int argc;
