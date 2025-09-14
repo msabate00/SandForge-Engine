@@ -46,6 +46,7 @@ private:
     void Step();
 
     int LinearIndex(int x, int y) const { return y * gridW + x; };
+    int ChunkLinearIndex(int x, int y) const { return y * chunksW + x; };
 
     int ChunkIndexByCell(int x, int y) const;
     void MarkChunkSim(int x, int y) { int ci = ChunkIndexByCell(x, y); if (ci >= 0) chunkDirtyNext[ci] = 1; }

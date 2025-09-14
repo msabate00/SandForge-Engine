@@ -147,32 +147,76 @@ void Engine::SetCell(int x, int y, uint8 m)
 void Engine::Step() {
 
     //FIX - EL ORDEN EN LO QUE SE LEEN LOS CHUNKS ES UN PROBLEMA, POR ESO LE PASA ESO A LA ARENA
-    for (int ci = 0; ci < chunkDirtyNow.size(); ci++) {
-        if (!chunkDirtyNow[ci]) continue;
-        int cX, cY, cW, cH;
-        GetChunkRect(ci, cX, cY, cW, cH);
-        int x0 = cX;
-        int y0 = cY;
-        int x1 = cX + cW;
-        int y1 = cY + cH;
 
-        for (int y = y1 - 1; y >= y0; y--) {
-            bool l2r = ((y ^ parity) & 1);
-            int xs = l2r ? x0 : (x1 - 1);
-            int xe = l2r ? x1 : (x0 - 1);
-            int inc = l2r ? 1 : -1;
 
-            for (int x = xs; x != xe; x += inc) {
-                const Cell c = front[LinearIndex(x, y)];
-                if (c.m == (uint8)Material::Empty) continue;
+    for (int cy = chunksH - 1; cy >= 0; cy--) {
+        bool cl2r = ((cy ^ parity) & 1);
+        int cx0 = cl2r ? 0 : (chunksW - 1);
+        int cx1 = cl2r ? chunksW : -1;
+        int cinc = cl2r ? 1 : -1;
 
-                const MatProps& mp = matProps(c.m);
-                if (mp.update) mp.update(*this, x, y, c);
+        for (int cx = cx0; cx != cx1; cx += cinc) {
+            int ci = ChunkLinearIndex(cx, cy);
+            if (!chunkDirtyNow[ci]) continue;
+            int cX, cY, cW, cH;
+            GetChunkRect(ci, cX, cY, cW, cH);
+            int x0 = cX;
+            int y0 = cY;
+            int x1 = cX + cW;
+            int y1 = cY + cH;
+
+            for (int y = y1 - 1; y >= y0; y--) {
+                bool l2r = ((y ^ parity) & 1);
+                int xs = l2r ? x0 : (x1 - 1);
+                int xe = l2r ? x1 : (x0 - 1);
+                int inc = l2r ? 1 : -1;
+
+                for (int x = xs; x != xe; x += inc) {
+                    const Cell c = front[LinearIndex(x, y)];
+                    if (c.m == (uint8)Material::Empty) continue;
+
+                    const MatProps& mp = matProps(c.m);
+                    if (mp.update) mp.update(*this, x, y, c);
+
+                }
 
             }
 
         }
+
+
     }
+
+
+
+
+    //Old
+    //for (int ci = 0; ci < chunkDirtyNow.size(); ci++) {
+    //    if (!chunkDirtyNow[ci]) continue;
+    //    int cX, cY, cW, cH;
+    //    GetChunkRect(ci, cX, cY, cW, cH);
+    //    int x0 = cX;
+    //    int y0 = cY;
+    //    int x1 = cX + cW;
+    //    int y1 = cY + cH;
+
+    //    for (int y = y1 - 1; y >= y0; y--) {
+    //        bool l2r = ((y ^ parity) & 1);
+    //        int xs = l2r ? x0 : (x1 - 1);
+    //        int xe = l2r ? x1 : (x0 - 1);
+    //        int inc = l2r ? 1 : -1;
+
+    //        for (int x = xs; x != xe; x += inc) {
+    //            const Cell c = front[LinearIndex(x, y)];
+    //            if (c.m == (uint8)Material::Empty) continue;
+
+    //            const MatProps& mp = matProps(c.m);
+    //            if (mp.update) mp.update(*this, x, y, c);
+
+    //        }
+
+    //    }
+    //}
 
     std::fill(chunkDirtyNow.begin(), chunkDirtyNow.end(), 0);
     chunkDirtyNow.swap(chunkDirtyNext);
