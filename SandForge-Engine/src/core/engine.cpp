@@ -75,7 +75,6 @@ bool Engine::tryMove(int x0, int y0, int x1, int y1, const Cell& c)
     if (!InRange(nx, ny)) return false;
     int si = LinearIndex(x0, y0), ni = LinearIndex(nx, ny);
 
-    if (front[ni].m != (uint8)Material::Empty) return false; //VIGILAR ver que pasa descometado
     if (back[ni].m != (uint8)Material::Empty) return false;
    
 
@@ -109,7 +108,6 @@ bool Engine::trySwap(int x0, int y0, int x1, int y1, const Cell& c)
 
     if (dst.m == (uint8)Material::Empty) return false; //No se puede intercambiar con empties
     if (matProps(c.m).density <= matProps(dst.m).density) return false; //No se puede intercambiar por densidad //Lo podria quitar realmetne
-    if (back[ni].m != front[ni].m) return false;
 
     back[ni] = c;
     back[si] = dst;
