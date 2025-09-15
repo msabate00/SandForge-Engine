@@ -26,6 +26,7 @@ public:
 
     void SetMouse(double x, double y, bool down);
     bool ConsumedMouse() const { return mouseConsumed; }
+    void SetNoRender(bool b) { noRender = b; }
 
 
     bool Button(float x, float y, float w, float h,
@@ -61,6 +62,7 @@ private:
 
     double mx = 0.0, my = 0.0; bool md = false, mdPrev = false;
     bool mouseConsumed = false;
+    bool noRender = false;
 
 };
 

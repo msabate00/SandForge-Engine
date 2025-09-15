@@ -126,7 +126,11 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 	}
 }
 
-void UI::End() { Flush(); }
+void UI::End() { 
+	
+	if (noRender) return;
+	Flush(); 
+}
 
 void UI::SetMouse(double x, double y, bool down) {
 	mdPrev = md; md = down; mx = x; my = y; mouseConsumed = false;
@@ -151,6 +155,7 @@ void UI::Flush() {
 
 
 void UI::Rect(float x, float y, float w, float h, uint32 c) {
+	if (noRender) return;
 	Vertex v[6] = {
 	{x, y, c}, {x + w, y, c}, {x + w, y + h, c},
 	{x, y, c}, {x + w, y + h, c}, {x, y + h, c},
@@ -160,7 +165,7 @@ void UI::Rect(float x, float y, float w, float h, uint32 c) {
 
 void UI::RectBorders(float x, float y, float w, float h, float t, uint32 rgba)
 {
-
+	if (noRender) return;
 	float tM = (t / 2);
 	Rect(x - tM, y - tM, w, tM, rgba);
 	Rect(x - tM, (y+h) - tM, w, tM, rgba);
@@ -179,7 +184,9 @@ bool UI::Button(float x, float y, float w, float h,
 
 
 	bool clicked = hover && !md && mdPrev;
-	if (hover && (md || clicked)) mouseConsumed = true;
+	if (hover && (md || clicked)) {
+		mouseConsumed = true;
+	}
 	return clicked;
 }
 

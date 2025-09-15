@@ -94,7 +94,7 @@ bool App::Update()
 		timer.Start();
 
 		input->BeginFrame();
-		input->ProcessBindings(brushMat, brushSize); 
+		
 
 		//TODO - Mouse hide/show
 		if (input->MouseY() > 50) {
@@ -103,6 +103,13 @@ bool App::Update()
 		else {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}
+		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
+		ui->SetNoRender(true);
+		ui->Begin(windowSize.x, windowSize.y);
+		ui->Draw(brushSize, brushMat);
+		ui->End();
+		input->ProcessBindings(brushMat, brushSize);
+
 
 
 		engine->Update(dt);
@@ -110,8 +117,8 @@ bool App::Update()
 		audio->Update(dt); //se puede quitar
 
 		renderer->Update(dt);
-		ui->SetMouse(input->MouseX(), input->MouseY(), input->MouseDown(GLFW_MOUSE_BUTTON_1));
-
+		
+		ui->SetNoRender(false);
 		ui->Begin(windowSize.x, windowSize.y);
 		ui->Draw(brushSize, brushMat);
 		ui->End();

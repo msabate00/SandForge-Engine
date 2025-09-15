@@ -2,6 +2,7 @@
 #include "app/Module.h"  
 #include "app/app.h"
 #include "input.h"
+#include "ui/ui.h"
 
 Engine::Engine(App* app, bool start_enabled) : Module(app, start_enabled) {};
 Engine::~Engine() = default;
@@ -304,6 +305,9 @@ bool Engine::PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh)
 }
 
 void Engine::Paint(int cx, int cy, Material m, int r) {
+
+
+    if (app->ui->ConsumedMouse()) return;
 
     cx = int((cx / double(app->windowSize.x)) * gridW);
     cy = int((cy / double(app->windowSize.y)) * gridH);
