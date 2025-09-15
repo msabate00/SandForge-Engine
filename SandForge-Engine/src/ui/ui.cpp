@@ -13,10 +13,10 @@ UI::~UI() = default;
 
 bool UI::Awake() {
 
-	std::string vsSrc = readTextFile(SHADER_DIR "/ui.vs.glsl");
-	std::string fsSrc = readTextFile(SHADER_DIR "/ui.fs.glsl");
+	std::string vsSrc = ReadTextFile(SHADER_DIR "/ui.vs.glsl");
+	std::string fsSrc = ReadTextFile(SHADER_DIR "/ui.fs.glsl");
 
-	prog = makeProgram(vsSrc.c_str(), fsSrc.c_str());
+	prog = MakeProgram(vsSrc.c_str(), fsSrc.c_str());
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);

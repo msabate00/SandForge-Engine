@@ -4,6 +4,10 @@ project(FallingSand VERSION 1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 include(FetchContent)
 
 # === GLFW (FetchContent) ===
@@ -43,8 +47,8 @@ target_link_libraries(FallingSand PRIVATE
 )
 
 target_compile_definitions(FallingSand PRIVATE
-  SHADER_DIR="${CMAKE_SOURCE_DIR}/assets/shaders"
-  AUDIO_DIR="${CMAKE_SOURCE_DIR}/assets/audios"
+  SHADER_DIR="assets/shaders"
+  AUDIO_DIR="assets/audios"
 )
 
 add_custom_command(TARGET FallingSand POST_BUILD
@@ -54,5 +58,5 @@ add_custom_command(TARGET FallingSand POST_BUILD
 )
 
 set_target_properties(FallingSand PROPERTIES
-  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:FallingSand>"
 )

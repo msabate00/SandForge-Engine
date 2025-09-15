@@ -10,9 +10,9 @@ Renderer::~Renderer() = default;
 
 bool Renderer::Awake() {
 
-    std::string vsSrc = readTextFile(SHADER_DIR "/grid.vs.glsl");
-    std::string fsSrc = readTextFile(SHADER_DIR "/grid.fs.glsl");
-    progGrid = makeProgram(vsSrc.c_str(), fsSrc.c_str());
+    std::string vsSrc = ReadTextFile(SHADER_DIR "/grid.vs.glsl");
+    std::string fsSrc = ReadTextFile(SHADER_DIR "/grid.fs.glsl");
+    progGrid = MakeProgram(vsSrc.c_str(), fsSrc.c_str());
 
     glGenVertexArrays(1, &vao);
     glGenTextures(1, &tex);
@@ -56,13 +56,13 @@ bool Renderer::Awake() {
 
     // --- Post programs ---
     std::string vsPost = vsSrc;
-    std::string fsThresh = readTextFile(SHADER_DIR "/post_threshold.fs.glsl");
-    std::string fsBlur = readTextFile(SHADER_DIR "/post_blur.fs.glsl");
-    std::string fsComp = readTextFile(SHADER_DIR "/post_composite.fs.glsl");
+    std::string fsThresh = ReadTextFile(SHADER_DIR "/post_threshold.fs.glsl");
+    std::string fsBlur = ReadTextFile(SHADER_DIR "/post_blur.fs.glsl");
+    std::string fsComp = ReadTextFile(SHADER_DIR "/post_composite.fs.glsl");
 
-    progThresh = makeProgram(vsPost.c_str(), fsThresh.c_str());
-    progBlur = makeProgram(vsPost.c_str(), fsBlur.c_str());
-    progComposite = makeProgram(vsPost.c_str(), fsComp.c_str());
+    progThresh = MakeProgram(vsPost.c_str(), fsThresh.c_str());
+    progBlur = MakeProgram(vsPost.c_str(), fsBlur.c_str());
+    progComposite = MakeProgram(vsPost.c_str(), fsComp.c_str());
 
     loc_th_uScene = glGetUniformLocation(progThresh, "uScene");
     loc_th_uThreshold = glGetUniformLocation(progThresh, "uThreshold");
