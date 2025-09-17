@@ -23,6 +23,8 @@ bool Engine::Awake() {
     mFront.assign(gridW * gridH, (uint8)Material::Empty);
     mBack.assign(gridW * gridH, (uint8)Material::Empty);
 
+    occ.assign(gridW * gridH, 0);
+
     chunkDirtyNow.assign(chunksW * chunksH, 1);
     chunkDirtyNext.assign(chunksW * chunksH, 0);
     chunkDirtyGPU.assign(chunksW * chunksH, 1);
@@ -46,8 +48,10 @@ bool Engine::Update(float dt) {
         back = front;
         mBack = mFront;
 
-
+        RebuildOcc();
         Step();
+        MoveNPCs();
+        RebuildOcc();
 
 
         front.swap(back);
@@ -78,6 +82,7 @@ bool Engine::tryMove(int x0, int y0, int x1, int y1, const Cell& c)
     int si = LinearIndex(x0, y0), ni = LinearIndex(nx, ny);
 
     if (back[ni].m != (uint8)Material::Empty) return false;
+    if (occ[ni] != 0) return false;
    
 
     back[ni] = c;
@@ -115,7 +120,9 @@ bool Engine::trySwap(int x0, int y0, int x1, int y1, const Cell& c)
     const Cell& dst = front[ni];
 
     if (dst.m == (uint8)Material::Empty) return false; //No se puede intercambiar con empties
+    if (occ[ni] != 0) return false;
     if (matProps(c.m).density <= matProps(dst.m).density) return false; //No se puede intercambiar por densidad //Lo podria quitar realmetne
+
 
     back[ni] = c;
     back[si] = dst;
@@ -312,6 +319,15 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
     cx = int((cx / double(app->windowSize.x)) * gridW);
     cy = int((cy / double(app->windowSize.y)) * gridH);
 
+    if (m == Material::NpcCell) {
+        if (!npcDrawed) {
+            AddNPC(cx, cy);
+            npcDrawed = true;
+        }
+        
+        return;
+    }
+
 
     int r2 = r * r;
     int xmin = std::max(0, cx - r), xmax = std::min(gridW - 1, cx + r);
@@ -324,12 +340,11 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
             int dx = x - cx, dy = y - cy;
             if (dx * dx + dy * dy <= r2) {
                 int i = LinearIndex(x, y);
-                front[i].m = (uint8)m;   // efecto inmediato
-                mFront[i] = (uint8)m;    // SoA inmediato
-                //markDirty(x, y);
+                front[i].m = (uint8)m; 
+                mFront[i] = (uint8)m;    
+
             }
         }
-   /* markDirtyRect(xmin, ymin, xmax, ymax);*/
     MarkChunksInRect(xmin, ymin, xmax - xmin, ymax - ymin);
 
 
@@ -357,4 +372,67 @@ bool Engine::randbit(int x, int y, int parity) {
     uint32_t h = (uint32_t)(x * 374761393u) ^ (uint32_t)(y * 668265263u) ^ (uint32_t)(parity * 0x9E3779B9u);
     h ^= h >> 13; h *= 1274126177u; h ^= h >> 16;
     return (h & 1u) != 0u;
+}
+
+void Engine::AddNPC(int x, int y, int w, int h, int dir) {
+    npcs.push_back(NPC{ x, y, w, h, dir, true });
+    MarkChunksInRect(x, y, w, h);
+}
+
+void Engine::RebuildOcc() {
+    std::fill(occ.begin(), occ.end(), 0);
+    for (int i = 0; i < (int)npcs.size(); ++i) {
+        const auto& n = npcs[i];
+        if (!n.alive) continue;
+        for (int yy = 0; yy < n.h; ++yy)
+            for (int xx = 0; xx < n.w; ++xx) {
+                int gx = n.x + xx, gy = n.y + yy;
+                if (InRange(gx, gy)) occ[LinearIndex(gx, gy)] = i + 1;
+            }
+    }
+}
+
+bool Engine::RectFreeOnBack(int x, int y, int w, int h, int ignoreId) const {
+    for (int yy = 0; yy < h; ++yy)
+        for (int xx = 0; xx < w; ++xx) {
+            int gx = x + xx, gy = y + yy;
+            if (!InRange(gx, gy)) return false;
+            int i = LinearIndex(gx, gy);
+            if (back[i].m != (uint8)Material::Empty) return false;
+            int occId = occ[i];
+            if (occId != 0 && occId != ignoreId) return false;
+        }
+    return true;
+}
+
+void Engine::MoveNPCs() {
+    constexpr int kMaxStep = 1; 
+    for (int i = 0; i < (int)npcs.size(); ++i) {
+        auto& n = npcs[i];
+        if (!n.alive) continue;
+        int id = i + 1;
+
+        //Caer
+        if (RectFreeOnBack(n.x, n.y + 1, n.w, n.h, id)) { n.y += 1; continue; }
+
+        int nx = n.x + n.dir;
+
+        //Horizontal
+        if (RectFreeOnBack(nx, n.y, n.w, n.h, id)) { n.x = nx; continue; }
+
+        //Trepar
+        auto solid = [&](int gx, int gy) {
+            return InRange(gx, gy) && back[LinearIndex(gx, gy)].m != (uint8)Material::Empty;
+            };
+        bool climbed = false;
+        for (int step = 1; step <= kMaxStep; ++step) {
+            if (!RectFreeOnBack(nx, n.y - step, n.w, n.h, id)) continue;
+            bool support = false;
+            for (int xx = 0; xx < n.w; ++xx)
+                support |= solid(nx + xx, (n.y - step) + n.h);
+            if (!support) continue;
+            n.y -= step; n.x = nx; climbed = true; break;
+        }
+        if (!climbed) n.dir = -n.dir;
+    }
 }

@@ -124,6 +124,26 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 			}
 		}
 	}
+
+
+
+	//NPCS
+	const int gW = app->gridSize.x, gH = app->gridSize.y;
+	float sx = std::floor(float(vw) / float(gW));
+	float sy = std::floor(float(vh) / float(gH));
+	float s = std::max(1.0f, std::min(sx, sy));
+	float sizeW = gW * s, sizeH = gH * s;
+	float offX = (vw - sizeW) * 0.5f;
+	float offY = (vh - sizeH) * 0.5f;
+
+	uint32 body = RGBAu32(220, 40, 200, 255);
+	for (const auto& n : app->engine->GetNPCs()) {
+		if (!n.alive) continue;
+		Rect(offX + n.x * s, offY + n.y * s, n.w * s, n.h * s, body);
+	}
+	
+
+
 }
 
 void UI::End() { 

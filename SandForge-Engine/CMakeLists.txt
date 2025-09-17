@@ -10,20 +10,20 @@ endif()
 
 include(FetchContent)
 
-# === GLFW (FetchContent) ===
+# === GLFW ===
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_INSTALL  OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(glfw
   GIT_REPOSITORY https://github.com/glfw/glfw.git
   GIT_TAG 3.3.8
 )
 FetchContent_MakeAvailable(glfw)
 
-# === GLAD (pre-generado, sin Python) ===
-add_library(glad_gl_core_33 STATIC
-  third_party/glad2/src/gl.c
-)
-target_include_directories(glad_gl_core_33 PUBLIC
-  third_party/glad2/include
-)
+# === GLAD ===
+add_library(glad_gl_core_33 STATIC third_party/glad2/src/gl.c)
+target_include_directories(glad_gl_core_33 PUBLIC third_party/glad2/include)
 
 # === Ejecutable ===
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS
@@ -35,20 +35,13 @@ file(GLOB_RECURSE SRC CONFIGURE_DEPENDS
 add_executable(FallingSand ${SRC})
 target_include_directories(FallingSand PRIVATE src)
 
-target_include_directories(FallingSand PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
 find_package(OpenGL REQUIRED)
-target_link_libraries(FallingSand PRIVATE
-  glfw
-  glad_gl_core_33
-  OpenGL::GL
-)
+target_link_libraries(FallingSand PRIVATE glfw glad_gl_core_33 OpenGL::GL)
 
+# === Rutas assets ===
 target_compile_definitions(FallingSand PRIVATE
-  SHADER_DIR="assets/shaders"
-  AUDIO_DIR="assets/audios"
+  SHADER_DIR="$<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/assets/shaders,$<TARGET_FILE_DIR:FallingSand>/assets/shaders>"
+  AUDIO_DIR="$<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/assets/audios,$<TARGET_FILE_DIR:FallingSand>/assets/audios>"
 )
 
 add_custom_command(TARGET FallingSand POST_BUILD

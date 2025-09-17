@@ -7,6 +7,14 @@
 
 
 
+struct NPC {
+    int x, y;
+    int w = 2, h = 4;
+    int dir = 1;
+    bool alive = true;
+};
+
+
 class Engine : public Module {
 public:
     Engine(App* app, bool start_enabled = true);
@@ -42,6 +50,9 @@ public:
     void GetChunkRect(int chunkIndex, int& x, int& y, int& w, int& h);
     bool PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh);
 
+    void AddNPC(int x, int y, int w = 2, int h = 4, int dir = 1);
+    const std::vector<NPC>& GetNPCs() const { return npcs; }
+
 private:
 
     void Step();
@@ -57,11 +68,17 @@ private:
     void MarkChunksInRect(int x, int y, int w, int h);
     void MarkChunksNeighborIfBorder(int x, int y);
 
+    void RebuildOcc();
+    bool RectFreeOnBack(int x, int y, int w, int h, int ignoreId) const;
+    void MoveNPCs();
+
 public:
     bool paused = false;
     bool stepOnce = false;
     int parity = 0;
 
+    bool npcDrawed = false;
+     
 private:
     std::vector<Cell> front, back;
     std::vector<uint8> mFront, mBack;
@@ -81,5 +98,9 @@ private:
     static constexpr uint8_t TTL_VOL = 32;
 
     AudioInstance paintInstance{};
+
+    
+    std::vector<NPC> npcs;
+    std::vector<int> occ;
 
 };
