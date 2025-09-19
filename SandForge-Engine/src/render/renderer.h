@@ -49,6 +49,8 @@ private:
     int loc_uTex = -1;
     int loc_uGrid = -1;
     int loc_uView = -1;
+    int loc_uCamPos = -1;
+    int loc_uCamSize = -1;
 
     uint progThresh = 0, progBlur = 0, progComposite = 0;
     int loc_th_uScene = -1, loc_th_uThreshold = -1;

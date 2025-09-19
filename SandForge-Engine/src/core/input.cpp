@@ -54,6 +54,13 @@ void Input::ProcessBindings(Material& brushMat, int& brushSize) {
 
     if (this->KeyDown(GLFW_KEY_F1)) app->showChunks = ~app->showChunks;
 
+
+    float sp = 300 * app->dt;
+    if (KeyRepeat(GLFW_KEY_A)) app->SetCameraRect(app->camera.pos.x - sp, app->camera.pos.y , app->camera.size.x, app->camera.size.y);
+    if (KeyRepeat(GLFW_KEY_D)) app->SetCameraRect(app->camera.pos.x + sp, app->camera.pos.y, app->camera.size.x, app->camera.size.y);
+
+
+
     if (this->MouseDown(GLFW_MOUSE_BUTTON_1)) {
         app->engine->Paint(MouseX(), MouseY(), brushMat, brushSize);
     }

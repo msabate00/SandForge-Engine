@@ -9,6 +9,14 @@ class Input;
 class UI;
 class Audio;
 
+
+struct Camera2D { 
+	Vec2<float> pos{ 0,0 }; 
+	Vec2<float> size{ 320,180 }; 
+
+};
+
+
 class App
 {
 public:
@@ -31,6 +39,8 @@ public:
 	// Called before quitting
 	bool CleanUp();
 
+	void SetCameraRect(float x, float y, float w, float h);
+
 public:
 	Engine* engine;
 	Renderer* renderer;
@@ -41,10 +51,13 @@ public:
 
 
 	Vec2<int> windowSize{ 1280, 720 };
-	Vec2<int> gridSize{ 320, 180 };
+	Vec2<int> gridSize{ 920, 180 };
 
 	int frames; //para los randBit determinista y contador de fps
+	float dt;
 	uint8 showChunks = 0;
+
+	Camera2D camera;
 
 private:
 	int argc;

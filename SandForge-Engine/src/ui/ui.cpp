@@ -1,4 +1,4 @@
-#include "UI.h" 
+﻿#include "UI.h" 
 #include <glad/gl.h>
 #include "app/Module.h"  
 #include "app/app.h"
@@ -111,35 +111,59 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 			int x, y, w, h;
 			app->engine->GetChunkRect(ci, x, y, w, h);
 
-			x = int((x / double(app->gridSize.x)) * app->windowSize.x);
-			y = int((y / double(app->gridSize.y)) * app->windowSize.y);
-			w = int((w / double(app->gridSize.x)) * app->windowSize.x);
-			h = int((h / double(app->gridSize.y)) * app->windowSize.y);
+			int rx = std::max(x, int(app->camera.pos.x));
+			int ry = std::max(y, int(app->camera.pos.y));
+			int rw = std::min(x + w, int(app->camera.pos.x + app->camera.size.x)) - rx;
+			int rh = std::min(y + h, int(app->camera.pos.y + app->camera.size.y)) - ry;
+			if (rw <= 0 || rh <= 0) continue;
 
-			if (chunks[ci]) {
-				RectBorders(x, y, w, h, 4, RGBAu32(230, 130, 130, 200));
-			}
-			else {
-				RectBorders(x, y, w, h, 2, RGBAu32(230, 230, 230, 100));
-			}
+			float sx = ((rx - app->camera.pos.x) / app->camera.size.x) * app->windowSize.x;
+			float sy = ((ry - app->camera.pos.y) / app->camera.size.y) * app->windowSize.y;
+			float sw = (rw / app->camera.size.x) * app->windowSize.x;
+			float sh = (rh / app->camera.size.y) * app->windowSize.y;
+
+			if (chunks[ci]) RectBorders((int)sx, (int)sy, (int)sw, (int)sh, 4, RGBAu32(230, 130, 130, 200));
+			else            RectBorders((int)sx, (int)sy, (int)sw, (int)sh, 2, RGBAu32(230, 230, 230, 100));
+
 		}
 	}
 
 
 
 	//NPCS
-	const int gW = app->gridSize.x, gH = app->gridSize.y;
-	float sx = std::floor(float(vw) / float(gW));
-	float sy = std::floor(float(vh) / float(gH));
+
+	const float cx = app->camera.pos.x, cy = app->camera.pos.y;
+	const float cw = app->camera.size.x, ch = app->camera.size.y;
+
+	float sx = std::floor(vw / cw);
+	float sy = std::floor(vh / ch);
 	float s = std::max(1.0f, std::min(sx, sy));
-	float sizeW = gW * s, sizeH = gH * s;
+	float sizeW = cw * s, sizeH = ch * s;
 	float offX = (vw - sizeW) * 0.5f;
 	float offY = (vh - sizeH) * 0.5f;
+
+	auto drawNPC = [&](int x, int y, int w, int h, uint32 color) {
+		// recorte contra cámara
+		int rx = std::max(x, (int)cx);
+		int ry = std::max(y, (int)cy);
+		int rw = std::min(x + w, (int)(cx + cw)) - rx;
+		int rh = std::min(y + h, (int)(cy + ch)) - ry;
+		if (rw <= 0 || rh <= 0) return;
+
+		// celdas → píxeles
+		float px = offX + ((rx - cx) * s);
+		float py = offY + ((ry - cy) * s);
+		float pw = rw * s;
+		float ph = rh * s;
+
+		// opcional: alinear a píxel entero
+		Rect(std::floor(px), std::floor(py), std::floor(pw), std::floor(ph), color);
+		};
 
 	uint32 body = RGBAu32(220, 40, 200, 255);
 	for (const auto& n : app->engine->GetNPCs()) {
 		if (!n.alive) continue;
-		Rect(offX + n.x * s, offY + n.y * s, n.w * s, n.h * s, body);
+		drawNPC(n.x, n.y, n.w, n.h, body);
 	}
 	
 
@@ -230,8 +254,8 @@ bool UI::Slider(float x, float y, float w, float h,
 
 void UI::Circle(float cx, float cy, float r, uint32 c, int segments) {
 
-	float rx = r * (float)app->windowSize.x / (float)app->gridSize.x;
-	float ry = r * (float)app->windowSize.y / (float)app->gridSize.y;
+	float rx = r * (float)app->windowSize.x / (float)app->camera.size.x;
+	float ry = r * (float)app->windowSize.y / (float)app->camera.size.y;
 
 	if (rx <= 0 || ry <= 0) return;
 
@@ -252,8 +276,8 @@ void UI::Circle(float cx, float cy, float r, uint32 c, int segments) {
 
 void UI::Ring(float cx, float cy, float r, float t, uint32 c, int segments) {
 
-	float rx = r * (float)app->windowSize.x / (float)app->gridSize.x;
-	float ry = r * (float)app->windowSize.y / (float)app->gridSize.y;
+	float rx = r * (float)app->windowSize.x / (float)app->camera.size.x;
+	float ry = r * (float)app->windowSize.y / (float)app->camera.size.y;
 
 	if (t <= 0 || rx <= 0 || ry <= 0) return;
 

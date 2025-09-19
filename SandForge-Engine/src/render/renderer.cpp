@@ -26,6 +26,8 @@ bool Renderer::Awake() {
     loc_uTex = glGetUniformLocation(progGrid, "uTex");
     loc_uGrid = glGetUniformLocation(progGrid, "uGrid");
     loc_uView = glGetUniformLocation(progGrid, "uView");
+    loc_uCamPos = glGetUniformLocation(progGrid, "uCamPos");
+    loc_uCamSize = glGetUniformLocation(progGrid, "uCamSize");
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -147,6 +149,8 @@ void Renderer::DrawGrid(const std::vector<uint8>& indices, int w, int h, int vie
     glUniform1i(loc_uTex, 0);
     glUniform2f(loc_uGrid, float(w), float(h));
     glUniform2f(loc_uView, float(viewW), float(viewH));
+    glUniform2f(loc_uCamPos, app->camera.pos.x, app->camera.pos.y);
+    glUniform2f(loc_uCamSize, app->camera.size.x, app->camera.size.y);
     drawFullscreen();
 
     //Bloom

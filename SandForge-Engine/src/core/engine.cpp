@@ -316,8 +316,10 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
 
     if (app->ui->ConsumedMouse()) return;
 
-    cx = int((cx / double(app->windowSize.x)) * gridW);
-    cy = int((cy / double(app->windowSize.y)) * gridH);
+    float u = cx / (float)app->windowSize.x;
+    float v = cy / (float)app->windowSize.y;
+    cx = (int)std::floor(app->camera.pos.x + u * app->camera.size.x);
+    cy = (int)std::floor(app->camera.pos.y + v * app->camera.size.y);
 
     if (m == Material::NpcCell) {
         if (!npcDrawed) {

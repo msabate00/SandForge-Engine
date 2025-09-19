@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include "app/app.h"
-
+#include <algorithm>
 #include <chrono>
 #include "app/timer.h"
 #include "core/engine.h"
@@ -90,7 +90,7 @@ bool App::Update()
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
-		float dt = timer.Read();
+		dt = timer.Read();
 		timer.Start();
 
 		input->BeginFrame();
@@ -154,4 +154,12 @@ bool App::CleanUp()
 	audio->CleanUp();
 
 	return ret;
+}
+
+
+void App::SetCameraRect(float x, float y, float w, float h) {
+	camera.size.x = std::fmax(1.f, w);
+	camera.size.y = std::fmax(1.f, h);
+	camera.pos.x = std::clamp(x, 0.f, (float)gridSize.x - camera.size.x);
+	camera.pos.y = std::clamp(y, 0.f, (float)gridSize.y - camera.size.y);
 }
