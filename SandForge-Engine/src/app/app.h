@@ -51,7 +51,7 @@ public:
 
 
 	Vec2<int> windowSize{ 1280, 720 };
-	Vec2<int> gridSize{ 920, 180 };
+	Vec2<int> gridSize{ 920, 300 };
 
 	int frames; //para los randBit determinista y contador de fps
 	float dt;

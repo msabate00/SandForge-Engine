@@ -70,6 +70,7 @@ bool App::Start()
 	ui->Start();
 	audio->Start(); //se puede quitar
 
+	camera.pos.y = gridSize.y - camera.size.y;
 
 	return ret;
 }

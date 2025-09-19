@@ -27,7 +27,7 @@ void main(){
   if (any(lessThan(frag, vec2(0))) || any(greaterThanEqual(frag, size)))
     discard;
 
-  vec2 uvCam = frag / size;
+  vec2 uvCam = vec2(frag.x / size.x, 1.0 - frag.y / size.y);
   vec2 cellf = uCamPos + uvCam * uCamSize;
 
   if (any(lessThan(cellf, vec2(0))) || any(greaterThanEqual(cellf, uGrid)))
@@ -35,7 +35,7 @@ void main(){
 
   vec2 uvTex = cellf / uGrid;
   ivec2 cellI = ivec2(floor(cellf));
-  ivec2 texel = ivec2(cellI.x, int(uGrid.y) - 1 - cellI.y);
+  ivec2 texel = ivec2(cellI.x, cellI.y);
   uint m = texelFetch(uTex, texel, 0).r;
   if (m==0u) discard;
 

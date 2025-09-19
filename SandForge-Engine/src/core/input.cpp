@@ -58,6 +58,8 @@ void Input::ProcessBindings(Material& brushMat, int& brushSize) {
     float sp = 300 * app->dt;
     if (KeyRepeat(GLFW_KEY_A)) app->SetCameraRect(app->camera.pos.x - sp, app->camera.pos.y , app->camera.size.x, app->camera.size.y);
     if (KeyRepeat(GLFW_KEY_D)) app->SetCameraRect(app->camera.pos.x + sp, app->camera.pos.y, app->camera.size.x, app->camera.size.y);
+    if (KeyRepeat(GLFW_KEY_W)) app->SetCameraRect(app->camera.pos.x, app->camera.pos.y - sp, app->camera.size.x, app->camera.size.y);
+    if (KeyRepeat(GLFW_KEY_S)) app->SetCameraRect(app->camera.pos.x, app->camera.pos.y + sp, app->camera.size.x, app->camera.size.y);
 
 
 
