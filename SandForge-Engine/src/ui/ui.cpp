@@ -4,6 +4,7 @@
 #include "app/app.h"
 #include "core/utils.h"
 #include "core/engine.h"
+#include "render/renderer.h"
 #include "app/defs.h"
 
 
@@ -127,47 +128,6 @@ void UI::Draw(int& brushSize, Material& brushMat) {
 
 		}
 	}
-
-
-
-	//NPCS
-
-	const float cx = app->camera.pos.x, cy = app->camera.pos.y;
-	const float cw = app->camera.size.x, ch = app->camera.size.y;
-
-	float sx = std::floor(vw / cw);
-	float sy = std::floor(vh / ch);
-	float s = std::max(1.0f, std::min(sx, sy));
-	float sizeW = cw * s, sizeH = ch * s;
-	float offX = (vw - sizeW) * 0.5f;
-	float offY = (vh - sizeH) * 0.5f;
-
-	auto drawNPC = [&](int x, int y, int w, int h, uint32 color) {
-		// recorte contra cámara
-		int rx = std::max(x, (int)cx);
-		int ry = std::max(y, (int)cy);
-		int rw = std::min(x + w, (int)(cx + cw)) - rx;
-		int rh = std::min(y + h, (int)(cy + ch)) - ry;
-		if (rw <= 0 || rh <= 0) return;
-
-		// celdas → píxeles
-		float px = offX + ((rx - cx) * s);
-		float py = offY + ((ry - cy) * s);
-		float pw = rw * s;
-		float ph = rh * s;
-
-		// opcional: alinear a píxel entero
-		Rect(std::floor(px), std::floor(py), std::floor(pw), std::floor(ph), color);
-		};
-
-	uint32 body = RGBAu32(220, 40, 200, 255);
-	for (const auto& n : app->engine->GetNPCs()) {
-		if (!n.alive) continue;
-		drawNPC(n.x, n.y, n.w, n.h, body);
-	}
-	
-
-
 }
 
 void UI::End() { 
@@ -219,6 +179,12 @@ void UI::RectBorders(float x, float y, float w, float h, float t, uint32 rgba)
 
 }
 
+void UI::Image(const Texture2D& t, float x, float y, float w, float h, uint32 tint)
+{
+	Sprite s{ &t, x,y,w,h, 0,0,1,1, tint, RenderLayer::UI };
+	app->renderer->Queue(s);
+}
+
 
 bool UI::Button(float x, float y, float w, float h,
 	uint32 c, uint32 cH, uint32 cA) {
@@ -259,7 +225,7 @@ void UI::Circle(float cx, float cy, float r, uint32 c, int segments) {
 
 	if (rx <= 0 || ry <= 0) return;
 
-	int n = segments > 0 ? segments : std::max(12, std::min(128, int((6.2831853f * std::max(rx, ry)) / 8.0f)));
+	int n = segments > 0 ? segments : std::fmax(12, std::fmin(128, int((6.2831853f * std::fmax(rx, ry)) / 8.0f)));
 	const float dA = 6.2831853f / n;
 
 	verts.reserve(verts.size() + 3 * n);
@@ -281,9 +247,9 @@ void UI::Ring(float cx, float cy, float r, float t, uint32 c, int segments) {
 
 	if (t <= 0 || rx <= 0 || ry <= 0) return;
 
-	float rx0 = std::max(0.0f, rx - t * 0.5f), ry0 = std::max(0.0f, ry - t * 0.5f);
+	float rx0 = std::fmax(0.0f, rx - t * 0.5f), ry0 = std::fmax(0.0f, ry - t * 0.5f);
 	float rx1 = rx + t * 0.5f, ry1 = ry + t * 0.5f;
-	int n = segments > 0 ? segments : std::max(12, std::min(128, int((6.2831853f * std::max(rx, ry)) / 8.0f)));
+	int n = segments > 0 ? segments : std::fmax(12, std::fmin(128, int((6.2831853f * std::fmax(rx, ry)) / 8.0f)));
 	float dA = 6.2831853f / n;
 	float p0x = cx + rx0, p0y = cy, p1x = cx + rx1, p1y = cy;
 	for (int i = 1;i <= n;++i) {

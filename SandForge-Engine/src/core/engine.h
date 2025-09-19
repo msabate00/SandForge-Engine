@@ -4,6 +4,8 @@
 #include <cstdint>
 #include "material.h"
 #include "audio/audio.h"
+#include "render/sprite.h"
+#include "render/texture.h"
 
 
 
@@ -12,6 +14,7 @@ struct NPC {
     int w = 2, h = 4;
     int dir = 1;
     bool alive = true;
+    Sprite sprite;
 };
 
 
@@ -71,6 +74,7 @@ private:
     void RebuildOcc();
     bool RectFreeOnBack(int x, int y, int w, int h, int ignoreId) const;
     void MoveNPCs();
+    bool WorldRectToScreen(float x, float y, float w, float h, int vw, int vh, float& sx, float& sy, float& sw, float& sh);
 
 public:
     bool paused = false;
@@ -102,5 +106,7 @@ private:
     
     std::vector<NPC> npcs;
     std::vector<int> occ;
+
+    Texture2D npcTex;
 
 };

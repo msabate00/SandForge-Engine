@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "app/module.h"
 #include "core/material.h"
+#include "sprite.h"
 #include <vector>
 #include <cstdint>
 
@@ -21,6 +22,10 @@ public:
 
     bool CleanUp();
 
+
+    void Draw(const uint8* planeM, int gridW, int gridH, int x0, int y0, int rw, int rh);
+    void Queue(const Sprite& s);
+
 private:
 
     void DrawGrid(const std::vector<uint8>& indices, int w, int h, int viewW, int viewH);
@@ -32,8 +37,6 @@ private:
     void drawFullscreen();
 
 public:
-
-    void Draw(const uint8* planeM, int gridW, int gridH, int x0, int y0, int rw, int rh);
 
 private:
     uint progGrid = 0, vao = 0, tex = 0;;
@@ -64,4 +67,5 @@ private:
     std::vector<uint8> scratch;     // full
     std::vector<uint8> scratchRect; // rect
 
+    SpriteBatch sprites;
 };

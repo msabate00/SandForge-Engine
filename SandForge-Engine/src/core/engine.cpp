@@ -3,6 +3,7 @@
 #include "app/app.h"
 #include "input.h"
 #include "ui/ui.h"
+#include "render/renderer.h"
 
 Engine::Engine(App* app, bool start_enabled) : Module(app, start_enabled) {};
 Engine::~Engine() = default;
@@ -34,6 +35,10 @@ bool Engine::Awake() {
 
 }
 bool Engine::Start() {
+
+
+    npcTex.Load(SPRITE_DIR  "/SpritesTest.png");
+
     return true; 
 }
 bool Engine::PreUpdate() { return true; }
@@ -65,6 +70,19 @@ bool Engine::Update(float dt) {
 
     if (paused) elapsedTimeSinceStep = 0;
 
+    for (auto& n : npcs) {
+        float sx, sy, sw, sh;
+        if (!WorldRectToScreen((float)n.x, (float)n.y, (float)n.w, (float)n.h,
+            app->windowSize.x, app->windowSize.y, sx, sy, sw, sh))
+            continue;
+
+        n.sprite.x = std::floor(sx);
+        n.sprite.y = std::floor(sy) + 360; //Need to fix
+        n.sprite.w = std::floor(sw);
+        n.sprite.h = std::floor(sh);
+        n.sprite.layer = RenderLayer::WORLD;
+        app->renderer->Queue(n.sprite);
+    }
 
 
 	return true;
@@ -232,10 +250,10 @@ int Engine::ChunkIndexByCell(int x, int y) const
 
 void Engine::MarkChunksInRect(int x, int y, int w, int h)
 {
-    int minX = std::max(0, x);
-    int minY = std::max(0, y);
-    int maxX = std::min(gridW, x + w);
-    int maxY = std::min(gridH, y + h);
+    int minX = std::fmax(0, x);
+    int minY = std::fmax(0, y);
+    int maxX = std::fmin(gridW, x + w);
+    int maxY = std::fmin(gridH, y + h);
 
     //if (minX >= maxX || minY >= maxY) return; //VER QUE PASA SIN ESTO
 
@@ -284,8 +302,8 @@ void Engine::GetChunkRect(int ci, int& x, int& y, int& w, int& h)
     int cy = ci / chunksW;
     x = cx * CHUNK_SIZE;  
     y = cy * CHUNK_SIZE;
-    w = std::min(gridW, x + CHUNK_SIZE) - x;
-    h = std::min(gridH, y + CHUNK_SIZE) - y;
+    w = std::fmin(gridW, x + CHUNK_SIZE) - x;
+    h = std::fmin(gridH, y + CHUNK_SIZE) - y;
 }
 
 bool Engine::PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh)
@@ -302,8 +320,8 @@ bool Engine::PopChunkDirtyGPURect(int& x, int& y, int& rw, int& rh)
             }
             x = sx * CHUNK_SIZE;
             y = cy * CHUNK_SIZE;
-            rw = std::min(gridW - x, (cx - sx) * CHUNK_SIZE);
-            rh = std::min(gridH - y, CHUNK_SIZE);
+            rw = std::fmin(gridW - x, (cx - sx) * CHUNK_SIZE);
+            rh = std::fmin(gridH - y, CHUNK_SIZE);
             return true;
         }
     }
@@ -332,8 +350,8 @@ void Engine::Paint(int cx, int cy, Material m, int r) {
 
 
     int r2 = r * r;
-    int xmin = std::max(0, cx - r), xmax = std::min(gridW - 1, cx + r);
-    int ymin = std::max(0, cy - r), ymax = std::min(gridH - 1, cy + r);
+    int xmin = std::fmax(0, cx - r), xmax = std::fmin(gridW - 1, cx + r);
+    int ymin = std::fmax(0, cy - r), ymax = std::fmin(gridH - 1, cy + r);
 
 
 
@@ -378,6 +396,11 @@ bool Engine::randbit(int x, int y, int parity) {
 
 void Engine::AddNPC(int x, int y, int w, int h, int dir) {
     npcs.push_back(NPC{ x, y, w, h, dir, true });
+
+    Sprite s{};
+    s.tex = &npcTex;
+    npcs[npcs.size() - 1].sprite = s;
+
     MarkChunksInRect(x, y, w, h);
 }
 
@@ -437,4 +460,32 @@ void Engine::MoveNPCs() {
         }
         if (!climbed) n.dir = -n.dir;
     }
+}
+
+ bool Engine::WorldRectToScreen(float x, float y, float w, float h,
+    int vw, int vh,
+    float& sx, float& sy, float& sw, float& sh){
+
+
+     const float cx = app->camera.pos.x, cy = app->camera.pos.y;
+     const float cw = app->camera.size.x, ch = app->camera.size.y;
+
+     float rx = std::fmax(x, cx);
+     float ry = std::fmax(y, cy);
+     float rw = std::fmin(x + w, cx + cw) - rx;
+     float rh = std::fmin(y + h, cy + ch) - ry;
+     if (rw <= 0 || rh <= 0) return false;
+
+     float sxCell = std::floor(vw / cw);
+     float syCell = std::floor(vh / ch);
+     float s = std::fmax(1.0f, std::fmin(sxCell, syCell));
+
+     sx = (rx - cx) * s;
+     sy = (ry - cy) * s;            
+     sw = rw * s;
+     sh = rh * s;
+
+     sx = std::floor(sx); sy = std::floor(sy);
+     sw = std::floor(sw); sh = std::floor(sh);
+     return true;
 }

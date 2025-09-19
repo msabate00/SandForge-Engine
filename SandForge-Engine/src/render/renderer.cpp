@@ -1,4 +1,5 @@
 ﻿#include "Renderer.h" 
+#include "sprite.h"
 #include "app/Module.h"  
 #include "core/engine.h"
 #include "app/app.h"
@@ -56,6 +57,9 @@ bool Renderer::Awake() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // --- Sprites
+    sprites.Init();
+
     // --- Post programs ---
     std::string vsPost = vsSrc;
     std::string fsThresh = ReadTextFile(SHADER_DIR "/post_threshold.fs.glsl");
@@ -91,6 +95,7 @@ bool Renderer::Update(float dt) {
     
     int rx = 0, ry = 0, rw = 0, rh = 0;
     bool uploadedDirty = false;
+    ensureSceneTargets(app->windowSize.x, app->windowSize.y);
 
     while (app->engine->PopChunkDirtyGPURect(rx, ry, rw, rh)) {
         Draw(app->engine->GetFrontPlane(), app->gridSize.x, app->gridSize.y, rx, ry, rw, rh);
@@ -101,6 +106,8 @@ bool Renderer::Update(float dt) {
         Draw(app->engine->GetFrontPlane(), app->gridSize.x, app->gridSize.y, 0, 0, 0, 0);
         
     }
+    
+
 
     DrawGrid(std::vector<uint8>{}, app->gridSize.x, app->gridSize.y , app->windowSize.x, app->windowSize.y);
 
@@ -125,6 +132,11 @@ void Renderer::Draw(const uint8* planeM, int gridW, int gridH, int x0, int y0, i
     }
 }
 
+void Renderer::Queue(const Sprite& s)
+{
+    sprites.Push(s);
+}
+
 
 
 
@@ -143,6 +155,9 @@ void Renderer::DrawGrid(const std::vector<uint8>& indices, int w, int h, int vie
     glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    sprites.Begin(viewW, viewH);
+    sprites.Flush(RenderLayer::BG);
+
     glUseProgram(progGrid);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -152,6 +167,9 @@ void Renderer::DrawGrid(const std::vector<uint8>& indices, int w, int h, int vie
     glUniform2f(loc_uCamPos, app->camera.pos.x, app->camera.pos.y);
     glUniform2f(loc_uCamSize, app->camera.size.x, app->camera.size.y);
     drawFullscreen();
+
+    sprites.Begin(viewW, viewH);
+    sprites.Flush(RenderLayer::WORLD);
 
     //Bloom
     glDisable(GL_BLEND);
@@ -198,6 +216,9 @@ void Renderer::DrawGrid(const std::vector<uint8>& indices, int w, int h, int vie
 
     drawFullscreen();
     glEnable(GL_BLEND);
+
+    sprites.Begin(viewW, viewH);
+    sprites.Flush(RenderLayer::UI);
 
 }
 

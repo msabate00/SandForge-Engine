@@ -42,6 +42,7 @@ target_link_libraries(FallingSand PRIVATE glfw glad_gl_core_33 OpenGL::GL)
 target_compile_definitions(FallingSand PRIVATE
   SHADER_DIR="$<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/assets/shaders,$<TARGET_FILE_DIR:FallingSand>/assets/shaders>"
   AUDIO_DIR="$<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/assets/audios,$<TARGET_FILE_DIR:FallingSand>/assets/audios>"
+  SPRITE_DIR="$<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/assets/sprites,$<TARGET_FILE_DIR:FallingSand>/assets/sprites>"
 )
 
 add_custom_command(TARGET FallingSand POST_BUILD
