@@ -31,11 +31,27 @@ static void WaterUpdate(Engine& E, int x, int y, const Cell& self) {
     bool leftFirst = E.randbit(x, y , app->frames);
     int da = leftFirst ? -1 : +1, db = -da;
 
+    //Diagonal
     if (E.GetCell(x + da, y + 1).m == (uint8)Material::Empty && E.tryMove(x, y, da, +1, self)) return;
     if (E.GetCell(x + db, y + 1).m == (uint8)Material::Empty && E.tryMove(x, y, db, +1, self)) return;
 
+    //Horizontal
     if (E.GetCell(x + da, y).m == (uint8)Material::Empty && E.tryMove(x, y, da, 0, self)) return;
     if (E.GetCell(x + db, y).m == (uint8)Material::Empty && E.tryMove(x, y, db, 0, self)) return;
+
+    //Doble Diagonal
+    if (E.GetCell(x + da*2, y +2).m == (uint8)Material::Empty && E.GetCell(x + da * 1, y + 1).m == ((uint8)Material::Empty || (uint8)Material::Water) && E.tryMove(x, y, da*2, +2, self)) return;
+    if (E.GetCell(x + db*2, y +2).m == (uint8)Material::Empty && E.GetCell(x + db * 1, y + 1).m == ((uint8)Material::Empty || (uint8)Material::Water) &&  E.tryMove(x, y, db*2, +2, self)) return;
+
+    //Semi doble diagonal
+    if (E.GetCell(x + da*2, y + 1).m == (uint8)Material::Empty && E.GetCell(x + da * 1, y).m == ((uint8)Material::Empty || (uint8)Material::Water) && E.tryMove(x, y, da*2, +1, self)) return;
+    if (E.GetCell(x + db*2, y + 1).m == (uint8)Material::Empty && E.GetCell(x + db * 1, y).m == ((uint8)Material::Empty || (uint8)Material::Water) && E.tryMove(x, y, db*2, +1, self)) return;
+
+    //Doble horizontal
+    if (E.GetCell(x + da * 2, y).m == (uint8)Material::Empty && E.GetCell(x + da * 1, y).m == ((uint8)Material::Empty || (uint8)Material::Water) && E.tryMove(x, y, da * 2, 0, self)) return;
+    if (E.GetCell(x + db * 2, y).m == (uint8)Material::Empty && E.GetCell(x + db * 1, y).m == ((uint8)Material::Empty || (uint8)Material::Water) && E.tryMove(x, y, db * 2, 0, self)) return;
+
+    
 }
 
 static void WoodUpdate(Engine& E, int x, int y, const Cell& self) {
